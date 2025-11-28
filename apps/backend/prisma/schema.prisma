@@ -1,0 +1,1250 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- ENUMS ---
+
+enum DocumentType {
+  CC // Cédula de Ciudadanía
+  CE // Cédula de Extranjería
+  PA // Pasaporte
+  RC // Registro Civil
+  TI // Tarjeta de Identidad
+}
+
+enum AppointmentStatus {
+  proposed
+  pending
+  booked
+  arrived
+  fulfilled
+  cancelled
+  noshow
+  entered_in_error
+  checked_in
+  waitlist
+}
+
+enum EncounterStatus {
+  planned
+  arrived
+  triaged
+  in_progress
+  onleave
+  finished
+  cancelled
+}
+
+enum AuditEventAction {
+  C // Create
+  R // Read
+  U // Update
+  D // Delete
+  E // Execute
+}
+
+enum AuditEventOutcome {
+  Success
+  MinorFailure
+  SeriousFailure
+  MajorFailure
+}
+
+enum UserRole {
+  // Nivel 1 - Superintendencia
+  SUPER_ADMIN           // Administrador general del sistema
+  SUPERINTENDENTE       // Vigilancia nacional
+  
+  // Nivel 2 - ADRES (Gestión Financiera)
+  ADMIN_ADRES_NACIONAL  // Vista de todo el país
+  ADMIN_ADRES_REGIONAL  // Vista regional/departamental
+  
+  // Nivel 3 - CAP (Centro de Atención Primaria)
+  DIRECTOR_CAP          // Director del CAP
+  MEDICO_CAP            // Médico general del CAP
+  ODONTOLOGO_CAP        // Odontólogo del CAP
+  ENFERMERO_CAP         // Enfermero del CAP
+  ADMINISTRATIVO_CAP    // Personal administrativo del CAP
+  
+  // Nivel 4 - IPS (Hospitales/Clínicas)
+  DIRECTOR_IPS          // Director del hospital/clínica
+  ESPECIALISTA_IPS      // Médico especialista
+  LABORATORIO_IPS       // Personal de laboratorio
+  IMAGENES_IPS          // Personal de imágenes diagnósticas
+  FARMACIA_IPS          // Personal de farmacia
+  
+  // Nivel 5 - Gestores (Ex-EPS)
+  GESTOR_ADMINISTRATIVO // Auditoría y vigilancia (no maneja dinero)
+  
+  // Nivel 6 - Paciente
+  PACIENTE              // Usuario final del sistema
+  
+  // Legacy (mantener compatibilidad)
+  ADMIN
+  DOCTOR
+  NURSE
+  PHARMACIST
+  RADIOLOGIST
+  LAB_TECHNICIAN
+  RECEPTIONIST
+  PATIENT
+}
+
+// Tipo de régimen de salud
+enum RegimenSalud {
+  CONTRIBUTIVO    // Trabajadores formales que aportan
+  SUBSIDIADO      // Personas sin capacidad de pago
+  ESPECIAL        // Regímenes especiales (fuerzas armadas, etc.)
+  VINCULADO       // En proceso de afiliación
+}
+
+// Nivel de complejidad de IPS
+enum NivelComplejidad {
+  NIVEL_1   // Atención básica (CAPs)
+  NIVEL_2   // Atención intermedia
+  NIVEL_3   // Alta complejidad
+  NIVEL_4   // Especializada
+}
+
+// Estado de remisión
+enum EstadoRemision {
+  SOLICITADA
+  APROBADA
+  RECHAZADA
+  EN_PROCESO
+  COMPLETADA
+  CANCELADA
+}
+
+// --- USER & AUTH MODELS ---
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String    // Hashed password
+  role          UserRole  @default(PATIENT)
+  isActive      Boolean   @default(true)
+  firstName     String
+  lastName      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  patientId       String?   @unique
+  patient         Patient?  @relation(fields: [patientId], references: [id])
+  
+  practitionerId  String?   @unique
+  practitioner    Practitioner? @relation(fields: [practitionerId], references: [id])
+  
+  @@index([email])
+  @@index([role])
+}
+
+// --- CORE FHIR-like MODELS ---
+
+model Patient {
+  id        String       @id @default(cuid())
+  docType   DocumentType
+  docNumber String       @unique
+  firstName String
+  lastName  String
+  birthDate DateTime
+  gender    String?      // M, F, O
+  phone     String?
+  email     String?      @unique
+  
+  // Dirección para territorialización
+  address   String?
+  city      String?
+  department String?     // Departamento/Estado
+  postalCode String?
+  latitude  Float?       // Para geolocalización
+  longitude Float?
+  
+  // Información de salud
+  regimen   RegimenSalud @default(CONTRIBUTIVO)
+  bloodType String?      // A+, A-, B+, B-, AB+, AB-, O+, O-
+  allergies String?      // Lista de alergias
+  
+  // CAP asignado (territorialización)
+  capAsignadoId String?
+  capAsignado   CAP?     @relation(fields: [capAsignadoId], references: [id])
+  
+  // Datos biométricos
+  biometricRegistered Boolean @default(false)
+  faceRegisteredAt    DateTime?
+  
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  appointments  Appointment[]
+  encounters    Encounter[]
+  observations  Observation[]
+  conditions    Condition[]
+  prescriptions Prescription[]
+  dispensations Dispensation[]
+  authorizations Authorization[]
+  laboratoryOrders LaboratoryOrder[]
+  imagingOrders ImagingOrder[]
+  remisiones    Remision[]
+  user User?
+  
+  @@index([capAsignadoId])
+  @@index([regimen])
+  @@index([city])
+  @@index([department])
+}
+
+model Practitioner {
+  id              String   @id @default(cuid())
+  license         String   @unique // Medical License Number
+  firstName       String
+  lastName        String
+  specialty       String
+  faceDescriptor  String?  // JSON array of face descriptor for facial recognition
+  faceImage       String?  // Base64 encoded face image
+  faceRegisteredAt DateTime? // When face was registered
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  appointments  Appointment[]
+  encounters    Encounter[]
+  observations  Observation[]
+  conditions    Condition[]
+  prescriptions Prescription[]
+  dispensations Dispensation[] @relation("Dispenser")
+  authorizationsRequested Authorization[] @relation("AuthRequester")
+  authorizationsReviewed  Authorization[] @relation("AuthReviewer")
+  laboratoryOrders LaboratoryOrder[]
+  imagingOrders ImagingOrder[]
+  user User?
+  
+  // Relaciones con CAP e IPS
+  asignacionesCAP PersonalCAP[]
+  asignacionesIPS PersonalIPS[]
+  
+  // Firmas biométricas realizadas
+  firmasBiometricas FirmaBiometrica[]
+}
+
+model Organization {
+  id    String @id @default(cuid())
+  name  String
+  type  String // e.g., 'hospital', 'clinic'
+  city  String
+  state String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+  inventory    Inventory[]
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  status         AppointmentStatus @default(booked)
+  modality       String // e.g., 'consulta externa', 'especialista'
+  start          DateTime
+  end            DateTime
+  cancellationReason String?
+
+  patientId      String
+  patient        Patient    @relation(fields: [patientId], references: [id])
+
+  practitionerId String
+  practitioner   Practitioner @relation(fields: [practitionerId], references: [id])
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  encounter      Encounter? // An appointment may lead to an encounter
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Encounter {
+  id        String          @id @default(cuid())
+  status    EncounterStatus @default(planned)
+  reason    String?         // Reason for visit
+  start     DateTime?
+  end       DateTime?
+
+  patientId      String
+  patient        Patient    @relation(fields: [patientId], references: [id])
+
+  practitionerId String? // Can be null initially, assigned at triage
+  practitioner   Practitioner? @relation(fields: [practitionerId], references: [id])
+
+  appointmentId  String     @unique // Each encounter must come from one appointment
+  appointment    Appointment @relation(fields: [appointmentId], references: [id])
+
+  observations  Observation[]
+  conditions    Condition[]
+  prescriptions Prescription[]
+  laboratoryOrders LaboratoryOrder[]
+  imagingOrders ImagingOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+// --- SECURITY & AUDIT MODELS ---
+
+model AuditEvent {
+  id             String           @id @default(cuid())
+  action         AuditEventAction
+  outcome        AuditEventOutcome
+  outcomeDesc    String?
+  timestamp      DateTime         @default(now())
+  
+  userId         String? // Who performed the action (Practitioner, Admin, etc.)
+  sourceIp       String?
+  userAgent      String?
+
+  entityType     String? // e.g., 'Patient', 'Appointment'
+  entityId       String? // ID of the affected resource
+  reason         String? // e.g., 'Patient check-in', 'Clinical record access'
+}
+
+model KioskSession {
+  id             String   @id @default(cuid())
+  deviceId       String
+  location       String
+  lastHeartbeat  DateTime @default(now())
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+model Observation {
+  id              String    @id @default(cuid())
+  status          String    // ej. 'final', 'preliminary'
+  category        String    // ej. 'vital-signs', 'symptoms'
+  code            String    // ej. '8480-6' (Presión sistólica)
+  valueString     String?   // Valor como texto
+  valueQuantity   Float?    // Valor numérico
+  valueUnit       String?   // Unidad del valor numérico (ej. 'mmHg')
+  effectiveDateTime DateTime  @default(now())
+
+  encounterId     String
+  encounter       Encounter @relation(fields: [encounterId], references: [id])
+
+  patientId       String
+  patient         Patient   @relation(fields: [patientId], references: [id])
+
+  performerId     String?
+  performer       Practitioner? @relation(fields: [performerId], references: [id])
+
+  @@index([encounterId])
+  @@index([patientId])
+}
+
+model Condition {
+  id              String    @id @default(cuid())
+  clinicalStatus  String    // ej. 'active', 'resolved'
+  verificationStatus String // ej. 'confirmed', 'differential'
+  category        String    // ej. 'encounter-diagnosis'
+  code            String    // ej. 'J06.9' (Infección aguda de las vías respiratorias superiores)
+  onsetDateTime   DateTime? @default(now())
+
+  encounterId     String
+  encounter       Encounter @relation(fields: [encounterId], references: [id])
+
+  patientId       String
+  patient         Patient   @relation(fields: [patientId], references: [id])
+
+  asserterId      String?
+  asserter        Practitioner? @relation(fields: [asserterId], references: [id])
+
+  @@index([encounterId])
+  @@index([patientId])
+}
+
+model Prescription {
+  id                   String    @id @default(cuid())
+  medicationCode       String    // Código del medicamento (ej. código ATC)
+  medicationName       String    // Nombre del medicamento
+  dosage               String    // Dosis (ej. "500mg")
+  frequency            String    // Frecuencia (ej. "cada 8 horas")
+  duration             Int?      // Duración en días
+  instructions         String?   // Instrucciones adicionales
+  status               String    @default("active") // 'active', 'completed', 'cancelled'
+  validityPeriodStart  DateTime? // Inicio del período de validez
+  validityPeriodEnd    DateTime? // Fin del período de validez
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  patientId       String
+  patient         Patient      @relation(fields: [patientId], references: [id])
+
+  encounterId     String
+  encounter       Encounter    @relation(fields: [encounterId], references: [id])
+
+  practitionerId  String
+  practitioner    Practitioner @relation(fields: [practitionerId], references: [id])
+
+  dispensations   Dispensation[]
+  authorizations  Authorization[]
+
+  @@index([patientId])
+  @@index([encounterId])
+  @@index([practitionerId])
+}
+
+model Dispensation {
+  id                String    @id @default(cuid())
+  quantity          Int       // Cantidad dispensada
+  quantityUnit      String    // Unidad (ej: "tabletas", "ml", "cápsulas")
+  dispensedDate     DateTime  @default(now())
+  status            String    @default("completed") // 'completed', 'partial', 'cancelled'
+  notes             String?   // Notas adicionales del dispensador
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  prescriptionId    String
+  prescription      Prescription @relation(fields: [prescriptionId], references: [id])
+
+  patientId         String
+  patient           Patient      @relation(fields: [patientId], references: [id])
+
+  dispenserId       String?      // ID del profesional que dispensa (farmacéutico)
+  dispenser         Practitioner? @relation(name: "Dispenser", fields: [dispenserId], references: [id])
+
+  @@index([prescriptionId])
+  @@index([patientId])
+  @@index([dispenserId])
+}
+
+model Inventory {
+  id                String    @id @default(cuid())
+  medicationCode    String    // Código del medicamento (ej: código ATC o interno)
+  medicationName    String    // Nombre del medicamento
+  presentation      String    // Presentación (ej: "Tabletas 500mg", "Jarabe 120ml")
+  quantity          Int       // Cantidad actual en stock
+  quantityUnit      String    // Unidad (ej: "tabletas", "frascos", "cajas")
+  minQuantity       Int       @default(10) // Cantidad mínima antes de alerta
+  batchNumber       String?   // Número de lote
+  expiryDate        DateTime? // Fecha de vencimiento
+  location          String?   // Ubicación física en la farmacia (ej: "Estante A-3")
+  supplier          String?   // Proveedor del medicamento
+  unitPrice         Float?    // Precio unitario
+  totalValue        Float?    // Valor total del stock
+  lastRestockDate   DateTime? // Última fecha de reabastecimiento
+  status            String    @default("available") // 'available', 'low_stock', 'expired', 'discontinued'
+  notes             String?   // Notas adicionales
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([medicationCode])
+  @@index([medicationName])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([organizationId])
+}
+
+model Authorization {
+  id                  String    @id @default(cuid())
+  authorizationNumber String?   @unique // Número de autorización generado
+  requestDate         DateTime  @default(now())
+  responseDate        DateTime? // Fecha de respuesta de la entidad
+  status              String    @default("pending") // 'pending', 'approved', 'denied', 'cancelled'
+  priority            String    @default("routine") // 'urgent', 'routine'
+  justification       String    // Justificación médica para la autorización
+  diagnosis           String    // Diagnóstico asociado
+  treatmentPlan       String?   // Plan de tratamiento propuesto
+  estimatedCost       Float?    // Costo estimado del medicamento
+  approvedQuantity    Int?      // Cantidad aprobada
+  denialReason        String?   // Razón de negación si aplica
+  validUntil          DateTime? // Fecha de validez de la autorización
+  notes               String?   // Notas adicionales
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  prescriptionId      String
+  prescription        Prescription @relation(fields: [prescriptionId], references: [id])
+
+  patientId           String
+  patient             Patient      @relation(fields: [patientId], references: [id])
+
+  requesterId         String       // Médico que solicita
+  requester           Practitioner @relation(name: "AuthRequester", fields: [requesterId], references: [id])
+
+  reviewerId          String?      // Médico/funcionario que revisa
+  reviewer            Practitioner? @relation(name: "AuthReviewer", fields: [reviewerId], references: [id])
+
+  insuranceEntity     String?      // EPS o entidad de salud
+
+  @@index([prescriptionId])
+  @@index([patientId])
+  @@index([requesterId])
+  @@index([status])
+  @@index([requestDate])
+}
+
+// --- LABORATORY MODELS ---
+
+model LaboratoryOrder {
+  id             String             @id @default(cuid())
+  orderDate      DateTime           @default(now())
+  testCodes      Json               // Array de códigos de exámenes solicitados
+  priority       String             @default("routine") // 'urgent', 'routine'
+  status         String             @default("pending") // 'pending', 'in_progress', 'completed', 'cancelled'
+  notes          String?            // Notas adicionales del médico
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  patientId      String
+  patient        Patient            @relation(fields: [patientId], references: [id])
+
+  encounterId    String
+  encounter      Encounter          @relation(fields: [encounterId], references: [id])
+
+  practitionerId String
+  practitioner   Practitioner       @relation(fields: [practitionerId], references: [id])
+
+  results        LaboratoryResult[]
+
+  @@index([patientId])
+  @@index([encounterId])
+  @@index([practitionerId])
+  @@index([status])
+  @@index([orderDate])
+}
+
+model LaboratoryResult {
+  id             String          @id @default(cuid())
+  testCode       String          // Código del examen (ej: 'CBC', 'GLU', 'HbA1c')
+  testName       String          // Nombre del examen
+  result         String          // Valor del resultado
+  unit           String?         // Unidad de medida (ej: 'mg/dL', 'g/dL', '%')
+  referenceRange String?         // Rango de referencia normal
+  status         String          @default("final") // 'preliminary', 'final', 'corrected', 'cancelled'
+  interpretation String?         // Interpretación: 'normal', 'abnormal', 'critical'
+  resultDate     DateTime        // Fecha en que se obtiene el resultado
+  reportedBy     String?         // ID o nombre del profesional que reporta
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  orderId        String
+  order          LaboratoryOrder @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([testCode])
+  @@index([resultDate])
+}
+
+// --- IMAGING / RADIOLOGY MODELS ---
+
+model ImagingOrder {
+  id             String           @id @default(cuid())
+  orderDate      DateTime         @default(now())
+  studyType      String           // Tipo de estudio: 'x-ray', 'ct', 'mri', 'ultrasound', 'mammography', etc.
+  bodyRegion     String           // Región anatómica: 'chest', 'abdomen', 'head', 'spine', etc.
+  clinicalInfo   String?          // Información clínica relevante
+  priority       String           @default("routine") // 'urgent', 'routine', 'stat'
+  status         String           @default("pending") // 'pending', 'scheduled', 'in_progress', 'completed', 'cancelled'
+  scheduledDate  DateTime?        // Fecha programada para el estudio
+  notes          String?          // Notas adicionales
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  patientId      String
+  patient        Patient          @relation(fields: [patientId], references: [id])
+
+  encounterId    String
+  encounter      Encounter        @relation(fields: [encounterId], references: [id])
+
+  practitionerId String
+  practitioner   Practitioner     @relation(fields: [practitionerId], references: [id])
+
+  results        ImagingResult[]
+
+  @@index([patientId])
+  @@index([encounterId])
+  @@index([practitionerId])
+  @@index([status])
+  @@index([orderDate])
+  @@index([studyType])
+}
+
+model ImagingResult {
+  id              String        @id @default(cuid())
+  studyDate       DateTime      // Fecha en que se realizó el estudio
+  findings        String        // Hallazgos del radiólogo
+  impression      String        // Impresión diagnóstica
+  recommendation  String?       // Recomendaciones
+  status          String        @default("final") // 'preliminary', 'final', 'amended'
+  imageUrls       Json?         // Array de URLs de las imágenes (DICOM, PNG, JPG)
+  reportedBy      String?       // Radiólogo que reporta
+  reportDate      DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  orderId         String        @unique // Una orden tiene un resultado
+  order           ImagingOrder  @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([studyDate])
+  @@index([reportDate])
+}
+
+// ============================================
+// MODELOS REFORMA SALUD - PLAN MAESTRO MEDICARE
+// ============================================
+
+// --- CAP: CENTRO DE ATENCIÓN PRIMARIA ---
+// Puerta de entrada al sistema de salud (1 por cada 25,000 habitantes)
+
+model CAP {
+  id              String    @id @default(cuid())
+  codigo          String    @unique  // Código único del CAP
+  nombre          String
+  
+  // Ubicación (territorialización)
+  direccion       String
+  ciudad          String
+  departamento    String
+  codigoPostal    String?
+  latitude        Float?
+  longitude       Float?
+  
+  // Capacidad
+  poblacionAsignada Int     @default(25000)  // Población objetivo
+  poblacionActual   Int     @default(0)      // Pacientes actuales
+  
+  // Contacto
+  telefono        String?
+  email           String?
+  
+  // Horarios
+  horarioApertura String?   // ej: "07:00"
+  horarioCierre   String?   // ej: "19:00"
+  diasOperacion   String?   // ej: "Lunes a Viernes"
+  
+  // Estado
+  activo          Boolean   @default(true)
+  
+  // Servicios disponibles
+  tieneOdontologia    Boolean @default(true)
+  tieneVacunacion     Boolean @default(true)
+  tieneLaboratorio    Boolean @default(false)
+  tieneUrgencias      Boolean @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relaciones
+  pacientes       Patient[]
+  personal        PersonalCAP[]
+  remisionesOrigen Remision[] @relation("RemisionOrigen")
+  citas           CitaCAP[]
+  
+  // ADRES Regional al que pertenece
+  adresRegionalId String?
+  adresRegional   ADRESRegional? @relation(fields: [adresRegionalId], references: [id])
+  
+  @@index([ciudad])
+  @@index([departamento])
+  @@index([activo])
+}
+
+// Personal asignado a un CAP
+model PersonalCAP {
+  id              String    @id @default(cuid())
+  
+  capId           String
+  cap             CAP       @relation(fields: [capId], references: [id])
+  
+  practitionerId  String
+  practitioner    Practitioner @relation(fields: [practitionerId], references: [id])
+  
+  cargo           String    // MEDICO_CAP, ODONTOLOGO_CAP, ENFERMERO_CAP, ADMINISTRATIVO_CAP
+  esDirector      Boolean   @default(false)
+  fechaInicio     DateTime  @default(now())
+  fechaFin        DateTime?
+  activo          Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([capId, practitionerId])
+  @@index([capId])
+  @@index([practitionerId])
+}
+
+// Citas en el CAP
+model CitaCAP {
+  id              String    @id @default(cuid())
+  
+  capId           String
+  cap             CAP       @relation(fields: [capId], references: [id])
+  
+  patientId       String
+  
+  practitionerId  String?   // Puede asignarse después
+  
+  fechaHora       DateTime
+  duracionMinutos Int       @default(20)
+  
+  tipoConsulta    String    // medicina_general, odontologia, enfermeria, vacunacion, control_prenatal, etc.
+  motivo          String?
+  
+  estado          String    @default("programada") // programada, confirmada, en_curso, completada, cancelada, no_asistio
+  
+  // Si requiere remisión a IPS
+  requiereRemision Boolean  @default(false)
+  
+  notas           String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([capId])
+  @@index([patientId])
+  @@index([fechaHora])
+  @@index([estado])
+}
+
+// --- IPS: INSTITUCIONES PRESTADORAS DE SALUD ---
+// Hospitales, clínicas y laboratorios
+
+model IPS {
+  id              String          @id @default(cuid())
+  codigo          String          @unique  // Código único de la IPS
+  nombre          String
+  
+  // Tipo y nivel
+  tipo            String          // hospital, clinica, laboratorio, centro_imagenes
+  nivelComplejidad NivelComplejidad @default(NIVEL_2)
+  
+  // Ubicación
+  direccion       String
+  ciudad          String
+  departamento    String
+  codigoPostal    String?
+  latitude        Float?
+  longitude       Float?
+  
+  // Contacto
+  telefono        String?
+  email           String?
+  
+  // Capacidad
+  numeroCamas     Int?
+  numeroQuirofanos Int?
+  numeroUCI       Int?
+  
+  // Estado
+  activo          Boolean         @default(true)
+  
+  // Servicios (JSON array de especialidades disponibles)
+  servicios       Json?           // ["cardiologia", "neurologia", "cirugia_general", etc.]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  // Relaciones
+  remisionesDestino Remision[]    @relation("RemisionDestino")
+  personalIPS     PersonalIPS[]
+  
+  // ADRES Regional al que pertenece
+  adresRegionalId String?
+  adresRegional   ADRESRegional?  @relation(fields: [adresRegionalId], references: [id])
+  
+  @@index([ciudad])
+  @@index([departamento])
+  @@index([nivelComplejidad])
+  @@index([activo])
+}
+
+// Personal asignado a una IPS
+model PersonalIPS {
+  id              String    @id @default(cuid())
+  
+  ipsId           String
+  ips             IPS       @relation(fields: [ipsId], references: [id])
+  
+  practitionerId  String
+  practitioner    Practitioner @relation(fields: [practitionerId], references: [id])
+  
+  cargo           String    // DIRECTOR_IPS, ESPECIALISTA_IPS, LABORATORIO_IPS, etc.
+  especialidad    String?   // Para especialistas
+  esDirector      Boolean   @default(false)
+  fechaInicio     DateTime  @default(now())
+  fechaFin        DateTime?
+  activo          Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([ipsId, practitionerId])
+  @@index([ipsId])
+  @@index([practitionerId])
+}
+
+// --- REMISIONES: CAP → IPS ---
+// Sistema de remisiones para evitar el "paseo de la muerte"
+
+model Remision {
+  id              String        @id @default(cuid())
+  codigo          String        @unique  // Código único de remisión
+  
+  // Paciente
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  
+  // Origen (CAP)
+  capOrigenId     String
+  capOrigen       CAP           @relation("RemisionOrigen", fields: [capOrigenId], references: [id])
+  
+  // Destino (IPS) - Priorizar por cercanía (territorialización)
+  ipsDestinoId    String
+  ipsDestino      IPS           @relation("RemisionDestino", fields: [ipsDestinoId], references: [id])
+  
+  // Información clínica
+  diagnostico     String
+  motivoRemision  String
+  especialidadRequerida String
+  prioridad       String        @default("normal") // urgente, prioritario, normal
+  
+  // Estado
+  estado          EstadoRemision @default(SOLICITADA)
+  
+  // Fechas
+  fechaSolicitud  DateTime      @default(now())
+  fechaAprobacion DateTime?
+  fechaAtencion   DateTime?
+  
+  // Seguimiento
+  notas           String?
+  resultadoAtencion String?
+  
+  // Médico que remite
+  medicoRemitenteId String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([patientId])
+  @@index([capOrigenId])
+  @@index([ipsDestinoId])
+  @@index([estado])
+  @@index([fechaSolicitud])
+}
+
+// --- ADRES: GESTIÓN FINANCIERA ---
+
+model ADRESRegional {
+  id              String    @id @default(cuid())
+  codigo          String    @unique
+  nombre          String
+  departamento    String
+  
+  // Presupuesto
+  presupuestoAnual Float?
+  presupuestoEjecutado Float? @default(0)
+  
+  // Contacto
+  director        String?
+  telefono        String?
+  email           String?
+  
+  activo          Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relaciones
+  caps            CAP[]
+  ips             IPS[]
+  pagos           PagoADRES[]
+  
+  @@index([departamento])
+}
+
+// Pagos directos de ADRES a IPS
+model PagoADRES {
+  id              String    @id @default(cuid())
+  
+  adresRegionalId String
+  adresRegional   ADRESRegional @relation(fields: [adresRegionalId], references: [id])
+  
+  ipsDestinoId    String    // ID de la IPS que recibe el pago
+  
+  concepto        String    // Descripción del pago
+  monto           Float
+  fechaPago       DateTime  @default(now())
+  
+  // Referencia
+  numeroFactura   String?
+  periodo         String?   // ej: "2024-01"
+  
+  estado          String    @default("pendiente") // pendiente, procesado, rechazado
+  
+  // Firma biométrica de aprobación
+  firmaBiometricaId String?
+  firmaBiometrica   FirmaBiometrica? @relation(fields: [firmaBiometricaId], references: [id])
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([adresRegionalId])
+  @@index([ipsDestinoId])
+  @@index([fechaPago])
+  @@index([firmaBiometricaId])
+}
+
+// --- FIRMA BIOMÉTRICA ---
+// Registro de autorizaciones con reconocimiento facial
+
+model FirmaBiometrica {
+  id              String    @id @default(cuid())
+  
+  // Quién firma
+  practitionerId  String
+  practitioner    Practitioner @relation(fields: [practitionerId], references: [id])
+  
+  // Tipo de acción firmada
+  tipoAccion      String    // APROBACION_PAGO, PRESCRIPCION, REMISION, AUTORIZACION, etc.
+  
+  // Referencia a la entidad firmada
+  entidadTipo     String    // PagoADRES, Prescription, Remision, etc.
+  entidadId       String    // ID de la entidad
+  
+  // Datos de la firma
+  descriptorFacial String?  // Descriptor capturado al momento de firmar
+  confianza       Float?    // Nivel de confianza del reconocimiento (0-100)
+  
+  // Metadata
+  ipAddress       String?
+  userAgent       String?
+  
+  // Timestamps
+  fechaFirma      DateTime  @default(now())
+  
+  createdAt       DateTime  @default(now())
+  
+  // Relaciones
+  pagos           PagoADRES[]
+  
+  @@index([practitionerId])
+  @@index([tipoAccion])
+  @@index([entidadTipo, entidadId])
+  @@index([fechaFirma])
+}
+
+// --- MODELO PREVENTIVO ---
+
+model ProgramaPreventivo {
+  id              String    @id @default(cuid())
+  codigo          String    @unique
+  nombre          String
+  descripcion     String?
+  
+  // Población objetivo
+  edadMinima      Int?
+  edadMaxima      Int?
+  genero          String?   // M, F, null para ambos
+  
+  // Frecuencia
+  frecuenciaMeses Int       @default(12) // Cada cuántos meses
+  
+  // Tipo
+  tipo            String    // vacunacion, control_prenatal, tamizaje_cancer, control_cronico, etc.
+  
+  activo          Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  seguimientos    SeguimientoPreventivo[]
+}
+
+model SeguimientoPreventivo {
+  id              String    @id @default(cuid())
+  
+  programaId      String
+  programa        ProgramaPreventivo @relation(fields: [programaId], references: [id])
+  
+  patientId       String
+  
+  // Fechas
+  fechaProgramada DateTime
+  fechaRealizada  DateTime?
+  
+  estado          String    @default("pendiente") // pendiente, completado, vencido, cancelado
+  
+  notas           String?
+  resultado       String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([programaId])
+  @@index([patientId])
+  @@index([fechaProgramada])
+  @@index([estado])
+}
+
+// ═══════════════════════════════════════════════════════════
+// CUMPLIMIENTO NORMATIVO - GOBIERNO COLOMBIANO
+// ═══════════════════════════════════════════════════════════
+
+// --- RIPS (Registro Individual de Prestación de Servicios) ---
+// Resolución 3374/2000, actualizada por Resolución 2275/2023
+
+model RIPS {
+  id              String    @id @default(cuid())
+  
+  // Tipo de archivo RIPS
+  tipoArchivo     String    // AF (Afiliados), AC (Consultas), AP (Procedimientos), 
+                            // AM (Medicamentos), AU (Urgencias), AH (Hospitalizaciones),
+                            // AN (Recién Nacidos), AT (Otros Servicios)
+  
+  // Identificación
+  codigoPrestador String    // Código habilitación IPS
+  tipoDocumento   String    // CC, TI, CE, PA, RC, etc.
+  numeroDocumento String
+  
+  // Datos del servicio
+  fechaServicio   DateTime
+  codigoServicio  String    // CUPS (Clasificación Única de Procedimientos en Salud)
+  cantidad        Int       @default(1)
+  valorUnitario   Float
+  valorTotal      Float
+  
+  // Diagnósticos CIE-10
+  diagnosticoPrincipal    String
+  diagnosticoRelacionado1 String?
+  diagnosticoRelacionado2 String?
+  diagnosticoRelacionado3 String?
+  
+  // Finalidad y ámbito
+  finalidadConsulta String?   // 01-10 según normativa
+  causaExterna      String?   // 01-15 según normativa
+  tipoDiagnostico   String?   // 1=Impresión, 2=Confirmado nuevo, 3=Confirmado repetido
+  
+  // Referencias
+  patientId       String
+  encounterId     String?
+  ipsId           String
+  
+  // Estado del registro
+  estado          String    @default("pendiente") // pendiente, validado, enviado, rechazado
+  lote            String?   // Número de lote para envío
+  fechaEnvio      DateTime?
+  respuestaAdres  String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([tipoArchivo])
+  @@index([codigoPrestador])
+  @@index([fechaServicio])
+  @@index([estado])
+  @@index([patientId])
+  @@index([lote])
+}
+
+// --- MIPRES (Mi Prescripción) ---
+// Resolución 1885/2018 - Medicamentos NO PBS
+
+model MIPRES {
+  id              String    @id @default(cuid())
+  
+  // Número de prescripción MIPRES
+  numeroPrescripcion String?  @unique
+  
+  // Paciente
+  tipoDocumento   String
+  numeroDocumento String
+  patientId       String
+  
+  // Prescriptor
+  practitionerId  String
+  tipoIdPrescriptor String
+  numeroIdPrescriptor String
+  
+  // Medicamento/Tecnología
+  tipoTecnologia  String    // 1=Medicamento, 2=Procedimiento, 3=Dispositivo, 4=Producto nutricional, 5=Servicio complementario
+  codigoCUM       String?   // Código Único de Medicamentos
+  descripcion     String
+  principioActivo String?
+  concentracion   String?
+  formaFarmaceutica String?
+  viaAdministracion String?
+  
+  // Prescripción
+  cantidadPrescrita Int
+  cantidadEntregada Int     @default(0)
+  frecuencia      String?
+  duracionTratamiento Int?  // En días
+  
+  // Justificación (obligatoria para NO PBS)
+  justificacionMedica String @db.Text
+  indicacion      String?
+  
+  // Estado
+  estado          String    @default("borrador") // borrador, enviado, aprobado, rechazado, dispensado
+  fechaPrescripcion DateTime @default(now())
+  fechaAprobacion DateTime?
+  fechaDispensacion DateTime?
+  
+  // Respuesta MIPRES
+  codigoRespuesta String?
+  mensajeRespuesta String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([numeroPrescripcion])
+  @@index([patientId])
+  @@index([practitionerId])
+  @@index([estado])
+  @@index([fechaPrescripcion])
+}
+
+// --- Consentimiento Informado Digital ---
+// Ley 1581/2012 (Habeas Data) + Resolución 1995/1999
+
+model ConsentimientoInformado {
+  id              String    @id @default(cuid())
+  
+  // Paciente
+  patientId       String
+  
+  // Tipo de consentimiento
+  tipo            String    // TRATAMIENTO, PROCEDIMIENTO, DATOS_PERSONALES, INVESTIGACION, TELEMEDICINA
+  
+  // Contenido
+  titulo          String
+  descripcion     String    @db.Text
+  riesgos         String?   @db.Text
+  beneficios      String?   @db.Text
+  alternativas    String?   @db.Text
+  
+  // Firma
+  firmado         Boolean   @default(false)
+  fechaFirma      DateTime?
+  firmaDigital    String?   // Hash o imagen de firma
+  firmaBiometricaId String? // Referencia a firma biométrica
+  
+  // Testigo (si aplica)
+  nombreTestigo   String?
+  documentoTestigo String?
+  
+  // Profesional que explica
+  practitionerId  String?
+  
+  // Revocación
+  revocado        Boolean   @default(false)
+  fechaRevocacion DateTime?
+  motivoRevocacion String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([patientId])
+  @@index([tipo])
+  @@index([firmado])
+}
+
+// --- Factura Electrónica en Salud ---
+// DIAN + ADRES
+
+model FacturaElectronica {
+  id              String    @id @default(cuid())
+  
+  // Numeración
+  prefijo         String
+  numero          Int
+  cufe            String?   @unique // Código Único de Factura Electrónica
+  
+  // Emisor (IPS)
+  ipsId           String
+  nitEmisor       String
+  razonSocialEmisor String
+  
+  // Receptor (EPS/ADRES/Paciente)
+  tipoReceptor    String    // EPS, ADRES, PARTICULAR
+  nitReceptor     String?
+  razonSocialReceptor String?
+  
+  // Paciente
+  patientId       String?
+  
+  // Fechas
+  fechaEmision    DateTime  @default(now())
+  fechaVencimiento DateTime?
+  
+  // Valores
+  subtotal        Float
+  descuento       Float     @default(0)
+  iva             Float     @default(0)
+  total           Float
+  
+  // Detalle de servicios (JSON)
+  detalle         String    @db.Text // JSON con líneas de factura
+  
+  // Estado DIAN
+  estadoDian      String    @default("pendiente") // pendiente, enviada, aceptada, rechazada
+  fechaEnvioDian  DateTime?
+  respuestaDian   String?
+  
+  // Estado de pago
+  estadoPago      String    @default("pendiente") // pendiente, parcial, pagada, anulada
+  
+  // Glosas (objeciones)
+  tieneGlosas     Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  glosas          Glosa[]
+  
+  @@unique([prefijo, numero])
+  @@index([ipsId])
+  @@index([patientId])
+  @@index([fechaEmision])
+  @@index([estadoDian])
+  @@index([estadoPago])
+}
+
+// --- Glosas (Objeciones a Facturas) ---
+
+model Glosa {
+  id              String    @id @default(cuid())
+  
+  facturaId       String
+  factura         FacturaElectronica @relation(fields: [facturaId], references: [id])
+  
+  // Código de glosa según normativa
+  codigoGlosa     String    // G1-G10 según Decreto 4747/2007
+  descripcion     String
+  valorGlosado    Float
+  
+  // Estado
+  estado          String    @default("presentada") // presentada, aceptada, rechazada, conciliada
+  
+  // Respuesta
+  respuesta       String?   @db.Text
+  fechaRespuesta  DateTime?
+  valorAceptado   Float?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([facturaId])
+  @@index([estado])
+}

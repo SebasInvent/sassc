@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: si_salud_postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: sisalud
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: si_salud_redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
+    container_name: si_salud_backend
+    restart: always
+    ports:
+      - '3001:3001'
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: 'postgresql://admin:admin@postgres:5432/sisalud?schema=public'
+      REDIS_URL: 'redis://redis:6379'
+
+volumes:
+  postgres_data:
+  redis_data:

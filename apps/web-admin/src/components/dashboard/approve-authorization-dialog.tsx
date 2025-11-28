@@ -1,0 +1,138 @@
+"use client";
+
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { CheckCircle2 } from 'lucide-react';
+
+interface ApproveAuthorizationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  authorization: any;
+  onSuccess?: () => void;
+}
+
+export function ApproveAuthorizationDialog({
+  open,
+  onOpenChange,
+  authorization,
+  onSuccess
+}: ApproveAuthorizationDialogProps) {
+  const { token } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    approvedQuantity: '',
+    validDays: '30',
+    notes: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setLoading(true);
+
+    try {
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + Number(formData.validDays));
+
+      const res = await fetch(`http://localhost:3001/fhir/Authorization/${authorization.id}/approve`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reviewerId: 'default-reviewer-id',
+          approvedQuantity: Number(formData.approvedQuantity),
+          validUntil: validUntil.toISOString(),
+          notes: formData.notes || 'Aprobado'
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: 'Error desconocido' }));
+        throw new Error(errorData.message || 'Error al aprobar');
+      }
+
+      toast.success('Autorización aprobada exitosamente');
+      setFormData({ approvedQuantity: '', validDays: '30', notes: '' });
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error: any) {
+      toast.error(error.message || 'Error al aprobar autorización');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            Aprobar Autorización
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+            <p className="text-sm"><strong>Paciente:</strong> {authorization?.patient?.firstName} {authorization?.patient?.lastName}</p>
+            <p className="text-sm"><strong>Medicamento:</strong> {authorization?.prescription?.medicationName}</p>
+            <p className="text-sm"><strong>Diagnóstico:</strong> {authorization?.diagnosis}</p>
+          </div>
+
+          <div>
+            <Label htmlFor="approvedQuantity">Cantidad Aprobada *</Label>
+            <Input
+              id="approvedQuantity"
+              type="number"
+              value={formData.approvedQuantity}
+              onChange={(e) => setFormData({ ...formData, approvedQuantity: e.target.value })}
+              placeholder="Ej: 30"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="validDays">Válida por (días) *</Label>
+            <Input
+              id="validDays"
+              type="number"
+              value={formData.validDays}
+              onChange={(e) => setFormData({ ...formData, validDays: e.target.value })}
+              placeholder="Ej: 30"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notas adicionales</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Observaciones..."
+              rows={3}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
+              {loading ? 'Aprobando...' : 'Aprobar Autorización'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

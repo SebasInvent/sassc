@@ -1,0 +1,16 @@
+{
+  "name": "si-salud-monorepo",
+  "private": true,
+  "scripts": {
+    "backend": "pnpm --filter backend",
+    "web": "pnpm --filter web-admin",
+    "mobile": "pnpm --filter mobile-patient",
+    "kiosk": "pnpm --filter kiosk",
+    "build": "pnpm -r build",
+    "dev": "pnpm --parallel --stream dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
