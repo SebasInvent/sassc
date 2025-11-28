@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { loadModels, detectFace, euclideanDistance, stringToDescriptor } from '@/lib/faceRecognition';
+import { API_URL } from '@/lib/api';
 
 interface FirmaBiometricaProps {
   open: boolean;
@@ -109,13 +110,13 @@ export function FirmaBiometrica({
       setMensaje('Verificando identidad...');
 
       try {
-        // Detectar rostro
-        const detection = await detectFace(videoRef.current);
+        // Detectar rostro - detectFace retorna Float32Array directamente
+        const descriptor = await detectFace(videoRef.current);
         
-        if (detection && detection.descriptor) {
+        if (descriptor) {
           // Obtener descriptor del usuario actual
           const practitionerRes = await fetch(
-            `http://localhost:3001/auth/registered-faces`,
+            `${API_URL}/auth/registered-faces`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           
@@ -125,7 +126,7 @@ export function FirmaBiometrica({
             
             if (currentUser?.descriptor) {
               const storedDescriptor = stringToDescriptor(currentUser.descriptor);
-              const distance = euclideanDistance(detection.descriptor, storedDescriptor);
+              const distance = euclideanDistance(descriptor, storedDescriptor);
               const similarity = Math.max(0, Math.min(100, ((1.2 - distance) / 1.2) * 100));
               
               setConfianza(Math.round(similarity));
@@ -136,7 +137,7 @@ export function FirmaBiometrica({
                 setMensaje('Identidad verificada');
                 
                 // Crear firma en el backend
-                const firmaRes = await fetch('http://localhost:3001/firma-biometrica', {
+                const firmaRes = await fetch(`${API_URL}/firma-biometrica`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
