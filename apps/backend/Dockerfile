@@ -1,32 +1,40 @@
-# 1. Base Stage
-FROM node:20-slim AS base
-WORKDIR /usr/src/app
-RUN apt-get update && apt-get install -y openssl
-RUN npm install -g pnpm
+# Build stage
+FROM node:20-slim AS builder
+WORKDIR /app
 
-# 2. Pruning Stage (for production dependencies)
-FROM base AS pruner
-ENV CI=true
+# Install openssl for Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm install
+
+# Generate Prisma client FIRST
+RUN npx prisma generate
+
+# Copy source code
 COPY . .
-RUN pnpm install --prod
-RUN pnpm prune --prod
 
-# 3. Build Stage
-FROM base AS build
-ENV CI=true
-COPY . .
-RUN pnpm install --no-frozen-lockfile
-RUN pnpm --filter backend exec prisma generate
-RUN pnpm --filter backend build
-# Diagnóstico: Listar el contenido de la carpeta dist
-RUN ls -R apps/backend/dist
+# Build
+RUN npm run build
 
-# 4. Final Production Stage - Simplified to avoid bcrypt issues
-FROM base AS production
+# Production stage
+FROM node:20-slim AS production
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# Copy built files
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma ./prisma
+
 ENV NODE_ENV=production
 
-# Copy everything from build stage
-COPY --from=build /usr/src/app /usr/src/app
+EXPOSE 3001
 
-WORKDIR /usr/src/app/apps/backend
 CMD ["node", "dist/src/main.js"]
