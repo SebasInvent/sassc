@@ -7,10 +7,20 @@ import { Button } from '@/components/ui/button';
 interface CameraCaptureProps {
   onCapture: (imageBase64: string) => void;
   onCancel?: () => void;
+  onClose?: () => void;
   isProcessing?: boolean;
+  title?: string;
+  description?: string;
 }
 
-export function CameraCapture({ onCapture, onCancel, isProcessing = false }: CameraCaptureProps) {
+export function CameraCapture({ 
+  onCapture, 
+  onCancel, 
+  onClose,
+  isProcessing = false,
+  title = 'Captura Facial',
+  description = 'Posiciona tu rostro en el círculo'
+}: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -90,6 +100,7 @@ export function CameraCapture({ onCapture, onCancel, isProcessing = false }: Cam
   const handleCancel = () => {
     stopCamera();
     onCancel?.();
+    onClose?.();
   };
 
   if (error) {
@@ -116,6 +127,14 @@ export function CameraCapture({ onCapture, onCancel, isProcessing = false }: Cam
 
   return (
     <div className="flex flex-col items-center">
+      {/* Header */}
+      {(title || description) && (
+        <div className="text-center mb-4">
+          {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
+          {description && <p className="text-sm text-gray-500">{description}</p>}
+        </div>
+      )}
+
       {/* Video container */}
       <div className="relative rounded-xl overflow-hidden bg-gray-900 mb-4" style={{ maxWidth: '400px' }}>
         <video
@@ -153,7 +172,7 @@ export function CameraCapture({ onCapture, onCancel, isProcessing = false }: Cam
           {isProcessing ? 'Verificando...' : 'Capturar'}
         </Button>
         
-        {onCancel && (
+        {(onCancel || onClose) && (
           <Button onClick={handleCancel} variant="outline" size="lg">
             <X className="w-5 h-5" />
           </Button>
