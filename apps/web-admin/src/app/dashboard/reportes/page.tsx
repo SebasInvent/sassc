@@ -159,7 +159,7 @@ export default function ReportesPage() {
     return (
       <div className="space-y-6 p-8">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse" />
           ))}
@@ -169,12 +169,12 @@ export default function ReportesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <BarChart3 className="h-7 w-7 text-indigo-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <BarChart3 className="h-5 w-5 sm:h-7 sm:w-7 text-indigo-600" />
             Reportes y Analytics
           </h1>
           <p className="text-gray-500 mt-1">Métricas del sistema SASSC</p>
@@ -202,9 +202,9 @@ export default function ReportesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-600 font-medium">Pacientes</p>
-                <p className="text-3xl font-bold text-blue-900">{stats?.pacientes.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-900">{stats?.pacientes.total || 0}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
             </div>
             <p className="text-xs text-blue-600 mt-2">Territorializados</p>
           </CardContent>
@@ -215,9 +215,9 @@ export default function ReportesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-indigo-600 font-medium">Remisiones</p>
-                <p className="text-3xl font-bold text-indigo-900">{stats?.remisiones.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-indigo-900">{stats?.remisiones.total || 0}</p>
               </div>
-              <ArrowRightLeft className="h-8 w-8 text-indigo-500" />
+              <ArrowRightLeft className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-500" />
             </div>
             <p className="text-xs text-indigo-600 mt-2">
               Promedio: {stats?.remisiones.tiempoPromedio || 0} días
@@ -230,11 +230,11 @@ export default function ReportesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-emerald-600 font-medium">Girado</p>
-                <p className="text-3xl font-bold text-emerald-900">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-900">
                   {formatCurrency(stats?.financiero.totalGirado || 0)}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-emerald-500" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500" />
             </div>
             <p className="text-xs text-emerald-600 mt-2">Directo a IPS</p>
           </CardContent>
@@ -245,9 +245,9 @@ export default function ReportesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-rose-600 font-medium">Cumplimiento</p>
-                <p className="text-3xl font-bold text-rose-900">{stats?.preventivo.cumplimiento || 0}%</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-rose-900">{stats?.preventivo.cumplimiento || 0}%</p>
               </div>
-              <Heart className="h-8 w-8 text-rose-500" />
+              <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-rose-500" />
             </div>
             <p className="text-xs text-rose-600 mt-2">Modelo preventivo</p>
           </CardContent>
@@ -258,9 +258,9 @@ export default function ReportesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-600 font-medium">Firmas Hoy</p>
-                <p className="text-3xl font-bold text-purple-900">{stats?.firmas.hoy || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-900">{stats?.firmas.hoy || 0}</p>
               </div>
-              <ScanFace className="h-8 w-8 text-purple-500" />
+              <ScanFace className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
             </div>
             <p className="text-xs text-purple-600 mt-2">
               Total: {stats?.firmas.total || 0}
@@ -334,13 +334,13 @@ export default function ReportesPage() {
               <CardTitle className="text-lg">Indicadores Clave de Gestión</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium">Remisiones Completadas</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {stats?.remisiones.porEstado.find((e: any) => e.estado === 'COMPLETADA')?._count || 0}
                   </p>
                 </div>
@@ -349,7 +349,7 @@ export default function ReportesPage() {
                     <Clock className="h-5 w-5 text-amber-600" />
                     <span className="font-medium">Tiempo Promedio</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {stats?.remisiones.tiempoPromedio || 0} días
                   </p>
                 </div>
@@ -358,7 +358,7 @@ export default function ReportesPage() {
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                     <span className="font-medium">Controles Vencidos</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {stats?.preventivo.vencidos || 0}
                   </p>
                 </div>
@@ -367,7 +367,7 @@ export default function ReportesPage() {
                     <DollarSign className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium">Pagos Pendientes</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {formatCurrency(stats?.financiero.pendiente || 0)}
                   </p>
                 </div>
@@ -385,7 +385,7 @@ export default function ReportesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500 font-medium">{estado.estado}</p>
-                      <p className="text-3xl font-bold text-gray-900">{estado._count}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{estado._count}</p>
                     </div>
                     <div className={`p-3 rounded-xl`} style={{ backgroundColor: `${COLORS[index % COLORS.length]}20` }}>
                       <ArrowRightLeft className="h-6 w-6" style={{ color: COLORS[index % COLORS.length] }} />
@@ -420,11 +420,11 @@ export default function ReportesPage() {
 
         {/* Tab Financiero */}
         <TabsContent value="financiero" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
               <CardContent className="p-5">
                 <p className="text-sm text-emerald-600 font-medium">Total Girado</p>
-                <p className="text-3xl font-bold text-emerald-900">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-900">
                   {formatCurrency(stats?.financiero.totalGirado || 0)}
                 </p>
                 <p className="text-xs text-emerald-600 mt-2">Giro directo ADRES → IPS</p>
@@ -434,7 +434,7 @@ export default function ReportesPage() {
             <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
               <CardContent className="p-5">
                 <p className="text-sm text-amber-600 font-medium">Pendiente</p>
-                <p className="text-3xl font-bold text-amber-900">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">
                   {formatCurrency(stats?.financiero.pendiente || 0)}
                 </p>
                 <p className="text-xs text-amber-600 mt-2">Por aprobar</p>
@@ -444,7 +444,7 @@ export default function ReportesPage() {
             <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
               <CardContent className="p-5">
                 <p className="text-sm text-blue-600 font-medium">Firmas Biométricas</p>
-                <p className="text-3xl font-bold text-blue-900">{stats?.firmas.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-900">{stats?.firmas.total || 0}</p>
                 <p className="text-xs text-blue-600 mt-2">Transacciones firmadas</p>
               </CardContent>
             </Card>
@@ -457,7 +457,7 @@ export default function ReportesPage() {
             <CardContent>
               <div className="space-y-3">
                 {stats?.financiero.porRegional.slice(0, 5).map((ips: any, index: number) => (
-                  <div key={ips.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={ips.id || index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
                         {index + 1}
@@ -480,15 +480,15 @@ export default function ReportesPage() {
 
         {/* Tab Preventivo */}
         <TabsContent value="preventivo" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Card className="border-0 shadow-sm">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500 font-medium">Programas Activos</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats?.preventivo.programas || 0}</p>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stats?.preventivo.programas || 0}</p>
                   </div>
-                  <Heart className="h-8 w-8 text-rose-500" />
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-rose-500" />
                 </div>
               </CardContent>
             </Card>
@@ -498,9 +498,9 @@ export default function ReportesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500 font-medium">Tasa Cumplimiento</p>
-                    <p className="text-3xl font-bold text-emerald-600">{stats?.preventivo.cumplimiento || 0}%</p>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-600">{stats?.preventivo.cumplimiento || 0}%</p>
                   </div>
-                  <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                  <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500" />
                 </div>
               </CardContent>
             </Card>
@@ -510,9 +510,9 @@ export default function ReportesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500 font-medium">Controles Vencidos</p>
-                    <p className="text-3xl font-bold text-red-600">{stats?.preventivo.vencidos || 0}</p>
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">{stats?.preventivo.vencidos || 0}</p>
                   </div>
-                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                  <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
                 </div>
               </CardContent>
             </Card>

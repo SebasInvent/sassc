@@ -120,9 +120,9 @@ export default function AuditoriaPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse" />
           ))}
@@ -132,12 +132,12 @@ export default function AuditoriaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <Shield className="h-7 w-7 text-slate-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <Shield className="h-5 w-5 sm:h-7 sm:w-7 text-slate-600" />
             Auditoría del Sistema
           </h1>
           <p className="text-gray-500 mt-1">Trazabilidad completa de acciones y firmas biométricas</p>
@@ -149,18 +149,18 @@ export default function AuditoriaPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-600 font-medium">Firmas Biométricas</p>
-                <p className="text-3xl font-bold text-purple-900">{resumen?.firmas.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-900">{resumen?.firmas.total || 0}</p>
                 <p className="text-xs text-purple-600 mt-1">
                   {resumen?.firmas.mes || 0} este mes
                 </p>
               </div>
-              <ScanFace className="h-8 w-8 text-purple-500" />
+              <ScanFace className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
@@ -170,12 +170,12 @@ export default function AuditoriaPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-indigo-600 font-medium">Remisiones</p>
-                <p className="text-3xl font-bold text-indigo-900">{resumen?.remisiones.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-indigo-900">{resumen?.remisiones.total || 0}</p>
                 <p className="text-xs text-indigo-600 mt-1">
                   {resumen?.remisiones.mes || 0} este mes
                 </p>
               </div>
-              <ArrowRightLeft className="h-8 w-8 text-indigo-500" />
+              <ArrowRightLeft className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-500" />
             </div>
           </CardContent>
         </Card>
@@ -185,12 +185,12 @@ export default function AuditoriaPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-emerald-600 font-medium">Pagos Procesados</p>
-                <p className="text-3xl font-bold text-emerald-900">{resumen?.pagos.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-900">{resumen?.pagos.total || 0}</p>
                 <p className="text-xs text-emerald-600 mt-1">
                   {resumen?.pagos.mes || 0} este mes
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-emerald-500" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500" />
             </div>
           </CardContent>
         </Card>
@@ -200,12 +200,12 @@ export default function AuditoriaPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-rose-600 font-medium">Seguimientos</p>
-                <p className="text-3xl font-bold text-rose-900">{resumen?.seguimientos.total || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-rose-900">{resumen?.seguimientos.total || 0}</p>
                 <p className="text-xs text-rose-600 mt-1">
                   {resumen?.seguimientos.mes || 0} este mes
                 </p>
               </div>
-              <Heart className="h-8 w-8 text-rose-500" />
+              <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-rose-500" />
             </div>
           </CardContent>
         </Card>
@@ -275,7 +275,7 @@ export default function AuditoriaPage() {
             <CardContent>
               <div className="space-y-3">
                 {firmas.map((firma) => (
-                  <div key={firma.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div key={firma.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
                         <ScanFace className="h-6 w-6 text-purple-600" />
@@ -317,7 +317,7 @@ export default function AuditoriaPage() {
             <CardContent>
               <div className="space-y-3">
                 {pagos.map((pago) => (
-                  <div key={pago.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div key={pago.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                         pago.estado === 'procesado' ? 'bg-emerald-100' : 
@@ -374,7 +374,7 @@ export default function AuditoriaPage() {
             <CardContent>
               <div className="space-y-3">
                 {resumen?.topFirmantes.map((item, index) => (
-                  <div key={item.practitioner?.id || index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div key={item.practitioner?.id || index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
                         index === 0 ? 'bg-yellow-100 text-yellow-700' :
@@ -392,7 +392,7 @@ export default function AuditoriaPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-purple-600">{item.cantidad}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-600">{item.cantidad}</p>
                       <p className="text-xs text-gray-500">firmas</p>
                     </div>
                   </div>

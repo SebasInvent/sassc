@@ -143,9 +143,9 @@ export default function PreventivoPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse" />
           ))}
@@ -158,12 +158,12 @@ export default function PreventivoPage() {
   const vencidos = stats?.porEstado.find(e => e.estado === 'vencido')?._count || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <Heart className="h-7 w-7 text-rose-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <Heart className="h-5 w-5 sm:h-7 sm:w-7 text-rose-600" />
             Modelo Preventivo
           </h1>
           <p className="text-gray-500 mt-1">Programas de prevención y seguimiento poblacional</p>
@@ -175,13 +175,13 @@ export default function PreventivoPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-rose-50 to-pink-100">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-rose-600 font-medium">Programas Activos</p>
-                <p className="text-3xl font-bold text-rose-900">{stats?.totalProgramas || 0}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-rose-900">{stats?.totalProgramas || 0}</p>
               </div>
               <div className="p-3 bg-rose-500 rounded-xl">
                 <Heart className="h-6 w-6 text-white" />
@@ -195,7 +195,7 @@ export default function PreventivoPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-emerald-600 font-medium">Tasa Cumplimiento</p>
-                <p className="text-3xl font-bold text-emerald-900">{stats?.tasaCumplimiento || 0}%</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-900">{stats?.tasaCumplimiento || 0}%</p>
               </div>
               <div className="p-3 bg-emerald-500 rounded-xl">
                 <CheckCircle2 className="h-6 w-6 text-white" />
@@ -209,7 +209,7 @@ export default function PreventivoPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-amber-600 font-medium">Controles Pendientes</p>
-                <p className="text-3xl font-bold text-amber-900">{pendientes}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">{pendientes}</p>
               </div>
               <div className="p-3 bg-amber-500 rounded-xl">
                 <Clock className="h-6 w-6 text-white" />
@@ -223,7 +223,7 @@ export default function PreventivoPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-red-600 font-medium">Controles Vencidos</p>
-                <p className="text-3xl font-bold text-red-900">{vencidos}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-900">{vencidos}</p>
               </div>
               <div className="p-3 bg-red-500 rounded-xl">
                 <AlertTriangle className="h-6 w-6 text-white" />
@@ -247,7 +247,7 @@ export default function PreventivoPage() {
               </CardHeader>
               <CardContent className="space-y-3 max-h-80 overflow-y-auto">
                 {alertas.vencidos.map((seg) => (
-                  <div key={seg.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                  <div key={seg.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 bg-red-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                         <User className="h-5 w-5 text-red-600" />
@@ -286,7 +286,7 @@ export default function PreventivoPage() {
               </CardHeader>
               <CardContent className="space-y-3 max-h-80 overflow-y-auto">
                 {alertas.proximos.map((seg) => (
-                  <div key={seg.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                  <div key={seg.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 bg-amber-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
                         <User className="h-5 w-5 text-amber-600" />
@@ -322,7 +322,7 @@ export default function PreventivoPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {programas.map((p) => {
               const Icon = tipoIcons[p.tipo] || Heart;
               const colorClass = tipoColors[p.tipo] || 'bg-gray-100 text-gray-700';

@@ -97,8 +97,8 @@ export default function PharmacyPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Pill className="h-8 w-8" />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Pill className="h-6 w-6 sm:h-8 sm:w-8" />
             Farmacia - Dispensación
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -121,7 +121,7 @@ export default function PharmacyPage() {
             <Pill className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">Pendientes de dispensar</p>
           </CardContent>
         </Card>
@@ -132,7 +132,7 @@ export default function PharmacyPage() {
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.dispensed}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.dispensed}</div>
             <p className="text-xs text-muted-foreground">Medicamentos entregados</p>
           </CardContent>
         </Card>
@@ -143,7 +143,7 @@ export default function PharmacyPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-xl sm:text-2xl font-bold">-</div>
             <p className="text-xs text-muted-foreground">Ver inventario completo</p>
           </CardContent>
         </Card>

@@ -126,8 +126,8 @@ export default function LaboratoryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Beaker className="h-8 w-8" />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Beaker className="h-6 w-6 sm:h-8 sm:w-8" />
             Laboratorio Clínico
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -153,7 +153,7 @@ export default function LaboratoryPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">Órdenes registradas</p>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ export default function LaboratoryPage() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.pending}</div>
             <p className="text-xs text-muted-foreground">Sin procesar</p>
           </CardContent>
         </Card>
@@ -175,7 +175,7 @@ export default function LaboratoryPage() {
             <Beaker className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.inProgress}</div>
             <p className="text-xs text-muted-foreground">Procesando</p>
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export default function LaboratoryPage() {
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.completed}</div>
             <p className="text-xs text-muted-foreground">Resultados listos</p>
           </CardContent>
         </Card>

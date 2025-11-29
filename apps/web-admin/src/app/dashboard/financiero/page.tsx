@@ -275,9 +275,9 @@ export default function FinancieroPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse" />
           ))}
@@ -300,12 +300,12 @@ export default function FinancieroPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <DollarSign className="h-7 w-7 text-emerald-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <DollarSign className="h-5 w-5 sm:h-7 sm:w-7 text-emerald-600" />
             Gestión Financiera - ADRES
           </h1>
           <p className="text-gray-500 mt-1">Pagos directos a IPS · Sin intermediarios</p>
@@ -323,18 +323,18 @@ export default function FinancieroPage() {
       </div>
 
       {/* KPIs Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-green-100">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
               <p className="text-sm text-emerald-600 font-medium">Presupuesto Nacional</p>
               <div className="p-2 bg-emerald-500 rounded-lg">
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-emerald-900">{formatCurrency(stats.presupuestoNacional)}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-900">{formatCurrency(stats.presupuestoNacional)}</p>
             <div className="mt-3">
-              <div className="flex items-center justify-between text-xs mb-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs mb-1">
                 <span className="text-emerald-600">Ejecutado</span>
                 <span className="font-medium text-emerald-700">{stats.porcentajeEjecucion}%</span>
               </div>
@@ -350,13 +350,13 @@ export default function FinancieroPage() {
 
         <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-indigo-100">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
               <p className="text-sm text-blue-600 font-medium">UPC Promedio</p>
               <div className="p-2 bg-blue-500 rounded-lg">
                 <Users className="h-5 w-5 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-blue-900">{formatCurrency(stats.upcPromedio)}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-900">{formatCurrency(stats.upcPromedio)}</p>
             <p className="text-xs text-blue-600 mt-2">Por paciente / año</p>
             <p className="text-sm text-blue-700 mt-1 font-medium">
               {stats.totalAfiliados.toLocaleString()} afiliados
@@ -366,13 +366,13 @@ export default function FinancieroPage() {
 
         <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-violet-100">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
               <p className="text-sm text-purple-600 font-medium">Pagos del Mes</p>
               <div className="p-2 bg-purple-500 rounded-lg">
                 <CheckCircle2 className="h-5 w-5 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-purple-900">{formatCurrency(stats.pagosDelMes.monto)}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-900">{formatCurrency(stats.pagosDelMes.monto)}</p>
             <p className="text-xs text-purple-600 mt-2">Directos a IPS</p>
             <p className="text-sm text-purple-700 mt-1 font-medium">
               {stats.pagosDelMes.cantidad} transacciones
@@ -382,13 +382,13 @@ export default function FinancieroPage() {
 
         <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-50 to-orange-100">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
               <p className="text-sm text-amber-600 font-medium">Pagos Pendientes</p>
               <div className="p-2 bg-amber-500 rounded-lg">
                 <AlertTriangle className="h-5 w-5 text-white" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-amber-900">{formatCurrency(stats.deudaPendiente.monto)}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">{formatCurrency(stats.deudaPendiente.monto)}</p>
             <p className="text-xs text-amber-600 mt-2">Por aprobar</p>
             <p className="text-sm text-amber-700 mt-1 font-medium">
               {stats.deudaPendiente.cantidad} pagos pendientes
@@ -607,7 +607,7 @@ export default function FinancieroPage() {
                   : '0';
                 return (
                   <div key={regional.id} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
                       <div>
                         <h4 className="font-semibold text-gray-900">{regional.nombre}</h4>
                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
@@ -654,7 +654,7 @@ export default function FinancieroPage() {
           <CardTitle className="text-lg font-semibold">Principios del Modelo Financiero</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 bg-white rounded-xl border border-gray-100">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-emerald-100 rounded-lg">

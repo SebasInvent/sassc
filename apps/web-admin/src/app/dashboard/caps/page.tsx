@@ -142,17 +142,17 @@ export default function CapsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <Building2 className="h-7 w-7 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+            <Building2 className="h-5 w-5 sm:h-7 sm:w-7 text-blue-600" />
             Centros de Atención Primaria
           </h1>
-          <p className="text-gray-500 mt-1">Gestión de CAPs - Puerta de entrada al sistema de salud</p>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Gestión de CAPs - Puerta de entrada al sistema de salud</p>
         </div>
-        <Button className="bg-gray-900 hover:bg-gray-800">
+        <Button className="bg-gray-900 hover:bg-gray-800 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Nuevo CAP
         </Button>
@@ -160,7 +160,7 @@ export default function CapsPage() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -257,7 +257,7 @@ export default function CapsPage() {
       {/* CAPs Grid */}
       {filteredCaps.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-6 sm:p-12 text-center">
             <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No hay CAPs registrados</h3>
             <p className="text-gray-500 mb-4">Comienza creando el primer Centro de Atención Primaria</p>
@@ -268,7 +268,7 @@ export default function CapsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredCaps.map((cap) => (
             <Link key={cap.id} href={`/dashboard/caps/${cap.id}`}>
               <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group">

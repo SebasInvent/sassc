@@ -172,10 +172,10 @@ export default function InventoryPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Package className="h-8 w-8 text-white" />
+                <Package className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Inventario de Medicamentos</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Inventario de Medicamentos</h1>
                 <p className="text-cyan-100 mt-1">Gestión y control de stock de farmacia</p>
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function InventoryPage() {
           searchPlaceholder="Buscar por medicamento, código o lote..."
           searchKeys={['medicationName', 'medicationCode', 'batchNumber']}
           emptyMessage="No hay medicamentos en el inventario"
-          emptyIcon={<Package className="h-8 w-8 text-gray-400" />}
+          emptyIcon={<Package className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />}
         />
       </div>
     </div>

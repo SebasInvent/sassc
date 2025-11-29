@@ -104,8 +104,8 @@ export default function AppointmentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Calendar className="h-6 w-6 sm:h-8 sm:w-8" />
             Gestión de Citas
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -126,7 +126,7 @@ export default function AppointmentsPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
 
@@ -136,7 +136,7 @@ export default function AppointmentsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.today}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.today}</div>
           </CardContent>
         </Card>
 
@@ -146,7 +146,7 @@ export default function AppointmentsPage() {
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.upcoming}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.upcoming}</div>
           </CardContent>
         </Card>
       </div>

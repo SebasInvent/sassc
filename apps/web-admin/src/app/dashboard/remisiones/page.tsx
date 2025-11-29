@@ -142,12 +142,12 @@ export default function RemisionesPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="flex items-center justify-between">
           <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
           <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-24 bg-gray-200 rounded-xl animate-pulse" />
           ))}
@@ -157,18 +157,18 @@ export default function RemisionesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <ArrowRightLeft className="h-7 w-7 text-indigo-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <ArrowRightLeft className="h-5 w-5 sm:h-7 sm:w-7 text-indigo-600" />
             Sistema de Remisiones
           </h1>
           <p className="text-gray-500 mt-1">Gestión de remisiones CAP → IPS (Territorialización)</p>
         </div>
         <Link href="/dashboard/remisiones/nueva">
-          <Button className="bg-gray-900 hover:bg-gray-800">
+          <Button className="w-full sm:w-auto bg-gray-900 hover:bg-gray-800">
             <Plus className="h-4 w-4 mr-2" />
             Nueva Remisión
           </Button>
@@ -177,13 +177,13 @@ export default function RemisionesPage() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-indigo-600 font-medium">Total Remisiones</p>
-                  <p className="text-2xl font-bold text-indigo-900">{stats.total}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-indigo-900">{stats.total}</p>
                 </div>
                 <div className="p-3 bg-indigo-500 rounded-xl">
                   <ArrowRightLeft className="h-6 w-6 text-white" />
@@ -197,7 +197,7 @@ export default function RemisionesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-emerald-600 font-medium">Tiempo Promedio</p>
-                  <p className="text-2xl font-bold text-emerald-900">{stats.tiempoPromedioAtencionDias} días</p>
+                  <p className="text-xl sm:text-2xl font-bold text-emerald-900">{stats.tiempoPromedioAtencionDias} días</p>
                 </div>
                 <div className="p-3 bg-emerald-500 rounded-xl">
                   <Clock className="h-6 w-6 text-white" />
@@ -286,11 +286,11 @@ export default function RemisionesPage() {
       {/* Remisiones List */}
       {filteredRemisiones.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-6 sm:p-12 text-center">
             <ArrowRightLeft className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No hay remisiones</h3>
             <p className="text-gray-500 mb-4">Las remisiones de CAP a IPS aparecerán aquí</p>
-            <Button className="bg-gray-900 hover:bg-gray-800">
+            <Button className="w-full sm:w-auto bg-gray-900 hover:bg-gray-800">
               <Plus className="h-4 w-4 mr-2" />
               Crear Remisión
             </Button>

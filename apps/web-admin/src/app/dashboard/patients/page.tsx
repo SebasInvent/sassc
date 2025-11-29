@@ -105,7 +105,7 @@ export default function PatientsPage() {
             {[1, 2, 3].map(i => <div key={i} className="h-28 bg-gray-100 rounded-2xl" />)}
           </div>
           <div className="h-12 bg-gray-100 rounded-xl" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-44 bg-gray-100 rounded-2xl" />)}
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function PatientsPage() {
         mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pacientes</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">Pacientes</h1>
           <p className="text-gray-500 mt-1">Gestión integral de pacientes del sistema</p>
         </div>
         <AddPatientDialog onSuccess={() => mutate()} />
@@ -135,7 +135,7 @@ export default function PatientsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Pacientes</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded-xl">
                 <Users className="h-6 w-6 text-gray-600" />
@@ -149,7 +149,7 @@ export default function PatientsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Con Biometría</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{stats.withBiometric}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1">{stats.withBiometric}</p>
               </div>
               <div className="p-3 bg-emerald-50 rounded-xl">
                 <UserCheck className="h-6 w-6 text-emerald-600" />
@@ -163,7 +163,7 @@ export default function PatientsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Registros Hoy</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{stats.recent}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1">{stats.recent}</p>
               </div>
               <div className="p-3 bg-blue-50 rounded-xl">
                 <UserPlus className="h-6 w-6 text-blue-600" />
@@ -203,7 +203,7 @@ export default function PatientsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-all duration-500 delay-300 ${
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 transition-all duration-500 delay-300 ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           {patients.map((patient, index) => (

@@ -115,10 +115,10 @@ export default function UsersPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Shield className="h-8 w-8 text-white" />
+                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Gestión de Usuarios</h1>
                   <p className="text-gray-300 mt-1">Control de acceso y roles del sistema</p>
                 </div>
               </div>
@@ -140,7 +140,7 @@ export default function UsersPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">Registrados en el sistema</p>
           </CardContent>
         </Card>
@@ -151,7 +151,7 @@ export default function UsersPage() {
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</div>
             <p className="text-xs text-muted-foreground">Con acceso habilitado</p>
           </CardContent>
         </Card>
@@ -162,7 +162,7 @@ export default function UsersPage() {
             <Shield className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{stats.admins}</div>
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.admins}</div>
             <p className="text-xs text-muted-foreground">Acceso completo</p>
           </CardContent>
         </Card>
@@ -173,7 +173,7 @@ export default function UsersPage() {
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.doctors}</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.doctors}</div>
             <p className="text-xs text-muted-foreground">Personal médico</p>
           </CardContent>
         </Card>
@@ -269,7 +269,7 @@ export default function UsersPage() {
           <CardTitle>Permisos por Rol</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="p-4 border rounded-lg">
               <Badge className="bg-purple-500 text-white mb-2">Administrador</Badge>
               <p className="text-sm text-muted-foreground">

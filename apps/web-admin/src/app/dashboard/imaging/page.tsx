@@ -145,8 +145,8 @@ export default function ImagingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Scan className="h-8 w-8" />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Scan className="h-6 w-6 sm:h-8 sm:w-8" />
             Imágenes Diagnósticas
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -172,7 +172,7 @@ export default function ImagingPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">Estudios registrados</p>
           </CardContent>
         </Card>
@@ -183,7 +183,7 @@ export default function ImagingPage() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.pending}</div>
             <p className="text-xs text-muted-foreground">Sin programar</p>
           </CardContent>
         </Card>
@@ -194,7 +194,7 @@ export default function ImagingPage() {
             <Scan className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.scheduled}</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.scheduled}</div>
             <p className="text-xs text-muted-foreground">Agendados</p>
           </CardContent>
         </Card>
@@ -205,7 +205,7 @@ export default function ImagingPage() {
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.completed}</div>
             <p className="text-xs text-muted-foreground">Con resultados</p>
           </CardContent>
         </Card>
