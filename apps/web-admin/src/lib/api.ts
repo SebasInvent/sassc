@@ -1,5 +1,11 @@
 // Configuración de API para producción y desarrollo
+// NEXT_PUBLIC_ variables are inlined at build time
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// For debugging
+if (typeof window !== 'undefined') {
+  console.log('🌐 API_URL:', API_URL);
+}
 
 // Helper para hacer requests al backend
 export async function apiRequest(

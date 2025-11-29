@@ -21,6 +21,7 @@ import {
   euclideanDistance,
   stringToDescriptor 
 } from '@/lib/faceRecognition';
+import { API_URL } from '@/lib/api';
 
 interface RegisteredUser {
   id: string;
@@ -64,7 +65,7 @@ export default function LoginV2Page() {
     try {
       // Cargar usuarios registrados
       setStatus('Cargando usuarios...');
-      const res = await fetch('http://localhost:3001/auth/registered-faces');
+      const res = await fetch(`${API_URL}/auth/registered-faces`);
       const data = await res.json();
       setRegisteredUsers(data.users || []);
       console.log(`📋 ${data.count} usuarios con rostro registrado`);
@@ -228,7 +229,7 @@ export default function LoginV2Page() {
   const doLogin = async (userLicense: string) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ license: userLicense }),
