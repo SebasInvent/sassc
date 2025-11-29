@@ -49,7 +49,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
 
     try {
       // Crear un encounter simple primero
-      const encounterRes = await fetch('${API_URL}/fhir/Encounter', {
+      const encounterRes = await fetch(`${API_URL}/fhir/Encounter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
         status: 'active'
       };
 
-      const res = await fetch('${API_URL}/fhir/MedicationRequest', {
+      const res = await fetch(`${API_URL}/fhir/MedicationRequest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -90,13 +90,13 @@ export default function PreventivoPage() {
     setLoading(true);
     try {
       const [programasRes, alertasRes, statsRes] = await Promise.all([
-        fetch('${API_URL}/preventivo/programas', {
+        fetch(`${API_URL}/preventivo/programas`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_URL}/preventivo/alertas', {
+        fetch(`${API_URL}/preventivo/alertas`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_URL}/preventivo/stats', {
+        fetch(`${API_URL}/preventivo/stats`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

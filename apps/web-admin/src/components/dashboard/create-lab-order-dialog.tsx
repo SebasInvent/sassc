@@ -97,7 +97,7 @@ export function CreateLabOrderDialog({
 
     try {
       // Crear un encounter simple primero
-      const encounterRes = await fetch('${API_URL}/fhir/Encounter', {
+      const encounterRes = await fetch(`${API_URL}/fhir/Encounter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export function CreateLabOrderDialog({
         status: 'pending'
       };
 
-      const res = await fetch('${API_URL}/fhir/Laboratory/order', {
+      const res = await fetch(`${API_URL}/fhir/Laboratory/order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -55,7 +55,7 @@ export function AddInventoryDialog({ onSuccess }: AddInventoryDialogProps) {
         lastRestockDate: new Date().toISOString()
       };
 
-      const res = await fetch('${API_URL}/fhir/Inventory', {
+      const res = await fetch(`${API_URL}/fhir/Inventory`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -72,7 +72,7 @@ export function AddObservationDialog({ encounterId, appointment, mutate }: AddOb
       resetForm();
 
       // Send the request to the server
-      const response = await fetch('${API_URL}/fhir/Observation', {
+      const response = await fetch(`${API_URL}/fhir/Observation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

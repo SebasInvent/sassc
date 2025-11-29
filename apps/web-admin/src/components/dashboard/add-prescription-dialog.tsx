@@ -56,7 +56,7 @@ export function AddPrescriptionDialog({
         status: 'active'
       };
 
-      const res = await fetch('${API_URL}/fhir/MedicationRequest', {
+      const res = await fetch(`${API_URL}/fhir/MedicationRequest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

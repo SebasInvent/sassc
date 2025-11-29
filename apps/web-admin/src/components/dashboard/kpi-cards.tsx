@@ -26,7 +26,7 @@ export function KpiCards() {
 
     async function fetchKpis() {
       try {
-        const response = await fetch('${API_URL}/dashboard/kpis', {
+        const response = await fetch(`${API_URL}/dashboard/kpis`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

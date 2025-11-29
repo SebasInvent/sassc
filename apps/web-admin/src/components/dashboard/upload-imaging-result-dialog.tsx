@@ -66,7 +66,7 @@ export function UploadImagingResultDialog({
         reportedBy: formData.reportedBy || 'Radiologist'
       };
 
-      const res = await fetch('${API_URL}/fhir/Imaging/result', {
+      const res = await fetch(`${API_URL}/fhir/Imaging/result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

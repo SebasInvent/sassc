@@ -72,12 +72,12 @@ export default function ReportesPage() {
         firmasRes,
         capsRes,
       ] = await Promise.all([
-        fetch('${API_URL}/fhir/Patient', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('${API_URL}/remisiones/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('${API_URL}/financiero/stats', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null),
-        fetch('${API_URL}/preventivo/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('${API_URL}/firma-biometrica/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('${API_URL}/caps/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/fhir/Patient`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/remisiones/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/financiero/stats`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => null),
+        fetch(`${API_URL}/preventivo/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/firma-biometrica/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/caps/stats`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       const patients = patientsRes.ok ? await patientsRes.json() : [];

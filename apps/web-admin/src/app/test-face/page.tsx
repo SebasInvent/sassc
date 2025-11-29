@@ -36,7 +36,7 @@ export default function TestFacePage() {
     try {
       // Cargar usuarios registrados
       log('📋 Cargando usuarios registrados...');
-      const res = await fetch('${API_URL}/auth/registered-faces');
+      const res = await fetch(`${API_URL}/auth/registered-faces`);
       const data = await res.json();
       setRegisteredUsers(data.users || []);
       log(`✅ ${data.count} usuarios con rostro registrado`);

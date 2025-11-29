@@ -50,7 +50,7 @@ export function DispenseMedicationDialog({
         status: formData.status
       };
 
-      const res = await fetch('${API_URL}/fhir/MedicationDispense', {
+      const res = await fetch(`${API_URL}/fhir/MedicationDispense`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -43,7 +43,7 @@ export function AddConditionDialog({ encounterId, onConditionAdded }: AddConditi
     }
 
     try {
-      const response = await fetch('${API_URL}/fhir/Condition', {
+      const response = await fetch(`${API_URL}/fhir/Condition`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

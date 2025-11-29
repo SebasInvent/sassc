@@ -46,7 +46,7 @@ export function TodayAppointmentsTable() {
 
     async function fetchTodaysAppointments() {
       try {
-        const response = await fetch('${API_URL}/fhir/Appointment/today', {
+        const response = await fetch(`${API_URL}/fhir/Appointment/today`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

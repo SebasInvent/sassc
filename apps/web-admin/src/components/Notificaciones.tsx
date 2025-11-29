@@ -82,10 +82,10 @@ export function NotificacionesBell() {
     setLoading(true);
     try {
       const [notifRes, resumenRes] = await Promise.all([
-        fetch('${API_URL}/notificaciones', {
+        fetch(`${API_URL}/notificaciones`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_URL}/notificaciones/resumen', {
+        fetch(`${API_URL}/notificaciones/resumen`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -115,7 +115,7 @@ export function NotificacionesBell() {
 
   const marcarTodasLeidas = async () => {
     try {
-      await fetch('${API_URL}/notificaciones/leer-todas', {
+      await fetch(`${API_URL}/notificaciones/leer-todas`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

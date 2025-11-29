@@ -82,7 +82,7 @@ export default function IpsPage() {
 
   const fetchIps = async () => {
     try {
-      const response = await fetch('${API_URL}/ips', {
+      const response = await fetch(`${API_URL}/ips`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -98,7 +98,7 @@ export default function IpsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('${API_URL}/ips/stats', {
+      const response = await fetch(`${API_URL}/ips/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

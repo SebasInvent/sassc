@@ -78,7 +78,7 @@ export function CreateImagingOrderDialog({
 
     try {
       // Crear un encounter simple primero
-      const encounterRes = await fetch('${API_URL}/fhir/Encounter', {
+      const encounterRes = await fetch(`${API_URL}/fhir/Encounter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export function CreateImagingOrderDialog({
         status: 'pending'
       };
 
-      const res = await fetch('${API_URL}/fhir/Imaging/order', {
+      const res = await fetch(`${API_URL}/fhir/Imaging/order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

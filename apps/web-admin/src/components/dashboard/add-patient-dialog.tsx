@@ -41,7 +41,7 @@ export function AddPatientDialog({ onSuccess }: AddPatientDialogProps) {
         birthDate: dateUtils.toISO(formData.birthDate)
       };
 
-      const res = await fetch('${API_URL}/fhir/Patient', {
+      const res = await fetch(`${API_URL}/fhir/Patient`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

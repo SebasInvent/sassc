@@ -70,7 +70,7 @@ export default function CapsPage() {
 
   const fetchCaps = async () => {
     try {
-      const response = await fetch('${API_URL}/caps', {
+      const response = await fetch(`${API_URL}/caps`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -86,7 +86,7 @@ export default function CapsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('${API_URL}/caps/stats', {
+      const response = await fetch(`${API_URL}/caps/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

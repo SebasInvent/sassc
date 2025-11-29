@@ -57,7 +57,7 @@ export function RequestAuthorizationDialog({
         notes: formData.notes || null
       };
 
-      const res = await fetch('${API_URL}/fhir/Authorization', {
+      const res = await fetch(`${API_URL}/fhir/Authorization`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

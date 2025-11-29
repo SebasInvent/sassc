@@ -93,7 +93,7 @@ export default function RemisionesPage() {
 
   const fetchRemisiones = async () => {
     try {
-      const response = await fetch('${API_URL}/remisiones', {
+      const response = await fetch(`${API_URL}/remisiones`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -109,7 +109,7 @@ export default function RemisionesPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('${API_URL}/remisiones/stats', {
+      const response = await fetch(`${API_URL}/remisiones/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

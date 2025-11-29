@@ -133,7 +133,7 @@ export default function FinancieroPage() {
     setLoading(true);
     try {
       // Obtener estadísticas
-      const statsRes = await fetch('${API_URL}/adres/estadisticas', {
+      const statsRes = await fetch(`${API_URL}/adres/estadisticas`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (statsRes.ok) {
@@ -142,7 +142,7 @@ export default function FinancieroPage() {
       }
 
       // Obtener pagos
-      const pagosRes = await fetch('${API_URL}/adres/pagos', {
+      const pagosRes = await fetch(`${API_URL}/adres/pagos`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (pagosRes.ok) {
@@ -151,7 +151,7 @@ export default function FinancieroPage() {
       }
 
       // Obtener lista de IPS
-      const ipsRes = await fetch('${API_URL}/ips', {
+      const ipsRes = await fetch(`${API_URL}/ips`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (ipsRes.ok) {
@@ -177,7 +177,7 @@ export default function FinancieroPage() {
     }
 
     try {
-      const res = await fetch('${API_URL}/adres/pagos', {
+      const res = await fetch(`${API_URL}/adres/pagos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

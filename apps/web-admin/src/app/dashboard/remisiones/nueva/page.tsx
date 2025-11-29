@@ -177,7 +177,7 @@ export default function NuevaRemisionPage() {
         return;
       }
 
-      const response = await fetch('${API_URL}/remisiones', {
+      const response = await fetch(`${API_URL}/remisiones`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

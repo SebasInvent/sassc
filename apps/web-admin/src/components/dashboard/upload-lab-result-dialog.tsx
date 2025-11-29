@@ -97,7 +97,7 @@ export function UploadLabResultDialog({
         reportedBy: formData.reportedBy || 'Lab Technician'
       };
 
-      const res = await fetch('${API_URL}/fhir/Laboratory/result', {
+      const res = await fetch(`${API_URL}/fhir/Laboratory/result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

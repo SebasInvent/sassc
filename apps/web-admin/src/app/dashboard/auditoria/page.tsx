@@ -70,16 +70,16 @@ export default function AuditoriaPage() {
 
     try {
       const [resumenRes, timelineRes, firmasRes, pagosRes] = await Promise.all([
-        fetch('${API_URL}/auditoria/resumen', {
+        fetch(`${API_URL}/auditoria/resumen`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_URL}/auditoria/timeline?limit=30', {
+        fetch(`${API_URL}/auditoria/timeline?limit=30`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_URL}/auditoria/firmas?limit=20', {
+        fetch(`${API_URL}/auditoria/firmas?limit=20`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_URL}/auditoria/pagos?limit=20', {
+        fetch(`${API_URL}/auditoria/pagos?limit=20`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
