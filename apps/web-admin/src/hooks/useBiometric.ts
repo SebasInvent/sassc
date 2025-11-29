@@ -69,7 +69,8 @@ export function useBiometricVerification() {
       const result = await biometricService.verify(data);
       
       if (result.success) {
-        toast.success(`Verificación exitosa - Confianza: ${(result.verificationScore * 100).toFixed(1)}%`);
+        const score = result.verificationScore ?? 0;
+        toast.success(`Verificación exitosa - Confianza: ${(score * 100).toFixed(1)}%`);
       } else if (result.isNotRegistered) {
         // Persona no registrada
         toast.error('No estás registrado en el sistema', {
