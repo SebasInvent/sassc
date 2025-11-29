@@ -223,7 +223,7 @@ export default function DashboardPage() {
   if (roleDashboard) {
     return (
       <ProtectedRoute>
-        <div className="container mx-auto px-8 py-8">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-8 py-4 lg:py-8">
           {roleDashboard}
         </div>
       </ProtectedRoute>
@@ -233,13 +233,13 @@ export default function DashboardPage() {
   // Dashboard genérico (para roles sin dashboard específico)
   return (
     <ProtectedRoute>
-      <div className="container mx-auto px-8 py-8 space-y-8">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-8 py-4 lg:py-8 space-y-6 lg:space-y-8">
         {/* Título de bienvenida */}
         <div className={`transition-all duration-700 ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Bienvenido al Sistema SASSC</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600">Bienvenido al Sistema SASSC</p>
         </div>
 
         {/* KPIs */}
@@ -251,8 +251,8 @@ export default function DashboardPage() {
 
         {/* Módulos Principales */}
         <div>
-        <h3 className="text-2xl font-bold mb-4">Módulos del Sistema</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Módulos del Sistema</h3>
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {visibleModules.map((module) => {
             const Icon = module.icon;
             return (
@@ -292,13 +292,13 @@ export default function DashboardPage() {
       </div>
 
           {/* Gráficos y Widgets */}
-          <div className={`grid gap-6 md:grid-cols-2 transition-all duration-700 delay-300 ${
+          <div className={`grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 transition-all duration-700 delay-300 ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
               <ActivityChart />
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
               <CriticalStockWidget />
             </div>
           </div>
@@ -307,16 +307,16 @@ export default function DashboardPage() {
           <div className={`transition-all duration-700 delay-400 ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2">
                   Citas de Hoy
-                  <Calendar className="h-7 w-7 text-blue-600" />
+                  <Calendar className="h-5 w-5 sm:h-7 sm:w-7 text-blue-600" />
                 </h2>
-                <p className="text-gray-600 mt-1">Agenda del día actual</p>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Agenda del día actual</p>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-x-auto">
               <TodayAppointmentsTable />
             </div>
           </div>
