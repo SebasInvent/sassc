@@ -31,7 +31,7 @@ interface RegisteredUser {
   descriptor: string;
 }
 
-type Step = 'loading' | 'camera' | 'recognized' | 'not_recognized' | 'manual_login';
+type Step = 'loading' | 'camera' | 'recognized' | 'not_registered' | 'no_face_detected' | 'manual_login';
 
 export default function LoginV2Page() {
   const router = useRouter();
@@ -174,24 +174,28 @@ export default function LoginV2Page() {
     if (!videoRef.current || isProcessingRef.current) return;
     
     isProcessingRef.current = true;
-    setStatus('Procesando...');
+    setStatus('Analizando rostro...');
     
     try {
       const descriptor = await detectFace(videoRef.current);
       
+      // CASO 1: No se detectó ningún rostro en la imagen
       if (!descriptor) {
-        setStatus('No se detectó rostro. Intente de nuevo.');
+        stopCamera();
+        setStep('no_face_detected');
         isProcessingRef.current = false;
         return;
       }
       
+      // CASO 2: No hay usuarios registrados en el sistema
       if (registeredUsers.length === 0) {
-        setStep('not_recognized');
+        stopCamera();
+        setStep('not_registered');
         isProcessingRef.current = false;
         return;
       }
       
-      // Comparar con todos los usuarios
+      // Comparar con todos los usuarios registrados
       const comparisons: Array<{user: RegisteredUser, distance: number}> = [];
       
       for (const user of registeredUsers) {
@@ -208,15 +212,19 @@ export default function LoginV2Page() {
       comparisons.sort((a, b) => a.distance - b.distance);
       const best = comparisons[0];
       
-      console.log(`🏆 Mejor: ${best.user.name} (${best.distance.toFixed(4)})`);
+      console.log(`🏆 Mejor match: ${best.user.name} (distancia: ${best.distance.toFixed(4)})`);
       
+      // CASO 3: Rostro reconocido - distancia menor a 0.6 significa match
       if (best.distance <= 0.6) {
         stopCamera();
         setRecognizedUser(best.user);
         setStep('recognized');
         setTimeout(() => doLogin(best.user.license), 2000);
       } else {
-        setStep('not_recognized');
+        // CASO 4: Rostro detectado pero NO coincide con ningún usuario registrado
+        // Esto significa que la persona NO está registrada en el sistema
+        stopCamera();
+        setStep('not_registered');
       }
       
     } catch (err: any) {
@@ -347,23 +355,78 @@ export default function LoginV2Page() {
             </div>
           )}
 
-          {/* Not Recognized */}
-          {step === 'not_recognized' && (
+          {/* Not Registered - Usuario no está en el sistema */}
+          {step === 'not_registered' && (
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <UserPlus className="w-10 h-10 text-blue-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">¡No estás registrado!</h2>
+              <p className="text-gray-500 mb-2">Tu rostro no se encuentra en nuestro sistema.</p>
+              <p className="text-gray-500 mb-6">Para acceder a SASSC, primero debes registrarte.</p>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => router.push('/registro-facial')} 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Registrarme Ahora
+                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">o si ya tienes cuenta</span>
+                  </div>
+                </div>
+                
+                <Button variant="outline" onClick={retry} className="w-full">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Intentar de Nuevo
+                </Button>
+                <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full text-gray-500">
+                  Ingresar con Licencia
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* No Face Detected - Problema técnico */}
+          {step === 'no_face_detected' && (
             <div className="p-8 text-center">
               <div className="w-20 h-20 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                <XCircle className="w-10 h-10 text-amber-600" />
+                <Camera className="w-10 h-10 text-amber-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Rostro No Reconocido</h2>
-              <p className="text-gray-500 mb-6">No encontramos su rostro en el sistema</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">No detectamos tu rostro</h2>
+              <p className="text-gray-500 mb-4">Asegúrate de:</p>
+              
+              <ul className="text-left text-sm text-gray-600 mb-6 space-y-2 max-w-xs mx-auto">
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-500">•</span>
+                  Estar en un lugar bien iluminado
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-500">•</span>
+                  Mirar directamente a la cámara
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-500">•</span>
+                  No usar gafas de sol o cubrebocas
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-500">•</span>
+                  Mantener el rostro dentro del círculo
+                </li>
+              </ul>
               
               <div className="space-y-2">
                 <Button onClick={retry} className="w-full">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Intentar de Nuevo
-                </Button>
-                <Button variant="outline" onClick={() => router.push('/registro-facial')} className="w-full">
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Registrar Mi Rostro
                 </Button>
                 <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full">
                   Ingresar con Licencia
