@@ -8,16 +8,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS configuración para producción
-  const allowedOrigins = process.env.CORS_ORIGINS 
-    ? process.env.CORS_ORIGINS.split(',') 
-    : ['http://localhost:3000'];
-
+  const corsOrigins = process.env.CORS_ORIGINS || 'http://localhost:3000';
+  
   app.enableCors({
-    origin: allowedOrigins,
+    origin: corsOrigins === '*' ? true : corsOrigins.split(','),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization',
     credentials: true,
   });
+  
+  console.log('🔒 CORS enabled for:', corsOrigins);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
