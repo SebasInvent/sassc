@@ -121,11 +121,11 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
           Nueva Prescripción
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Crear Nueva Prescripción</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <Label htmlFor="patientId">Paciente *</Label>
             <select
@@ -144,7 +144,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="medicationName">Medicamento *</Label>
               <Input
@@ -166,7 +166,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="dosage">Dosis *</Label>
               <Input

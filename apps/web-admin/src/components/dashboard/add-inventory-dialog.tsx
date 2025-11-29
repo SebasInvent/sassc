@@ -100,12 +100,12 @@ export function AddInventoryDialog({ onSuccess }: AddInventoryDialogProps) {
       <DialogTrigger asChild>
         <Button>+ Agregar Medicamento</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar Medicamento al Inventario</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="medicationCode">Código *</Label>
               <Input
@@ -139,7 +139,7 @@ export function AddInventoryDialog({ onSuccess }: AddInventoryDialogProps) {
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="quantity">Cantidad *</Label>
               <Input
@@ -182,7 +182,7 @@ export function AddInventoryDialog({ onSuccess }: AddInventoryDialogProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="batchNumber">Lote</Label>
               <Input
@@ -203,7 +203,7 @@ export function AddInventoryDialog({ onSuccess }: AddInventoryDialogProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="location">Ubicación</Label>
               <Input

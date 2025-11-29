@@ -105,7 +105,7 @@ export function AuthorizationDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
@@ -131,9 +131,9 @@ export function AuthorizationDetailDialog({
           </TabsList>
 
           {/* Tab General */}
-          <TabsContent value="general" className="space-y-4">
+          <TabsContent value="general" className="space-y-3 sm:space-y-4">
             {/* Estado y SLA */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   {getStatusIcon(authorization?.status)}
@@ -231,8 +231,8 @@ export function AuthorizationDetailDialog({
           </TabsContent>
 
           {/* Tab Información Clínica */}
-          <TabsContent value="clinical" className="space-y-4">
-            <div className="space-y-4">
+          <TabsContent value="clinical" className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Diagnóstico</h3>
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
@@ -290,11 +290,11 @@ export function AuthorizationDetailDialog({
           </TabsContent>
 
           {/* Tab Línea de Tiempo */}
-          <TabsContent value="timeline" className="space-y-4">
+          <TabsContent value="timeline" className="space-y-3 sm:space-y-4">
             <div className="relative">
               {/* Timeline items */}
-              <div className="space-y-6">
-                <div className="flex gap-4">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <div className="flex flex-col items-center">
                     <div className="rounded-full bg-blue-500 p-2">
                       <Calendar className="h-4 w-4 text-white" />
@@ -311,7 +311,7 @@ export function AuthorizationDetailDialog({
                 </div>
 
                 {authorization?.responseDate && (
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <div className="flex flex-col items-center">
                       <div className={`rounded-full p-2 ${
                         authorization?.status === 'approved' ? 'bg-green-500' :
@@ -354,7 +354,7 @@ export function AuthorizationDetailDialog({
           </TabsContent>
 
           {/* Tab Comentarios */}
-          <TabsContent value="comments" className="space-y-4">
+          <TabsContent value="comments" className="space-y-3 sm:space-y-4">
             <div>
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />

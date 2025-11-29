@@ -72,7 +72,7 @@ export function LabOrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
@@ -90,9 +90,9 @@ export function LabOrderDetailDialog({
           </TabsList>
 
           {/* Tab General */}
-          <TabsContent value="general" className="space-y-4">
+          <TabsContent value="general" className="space-y-3 sm:space-y-4">
             {/* Estado y Progreso */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   {getStatusIcon(order?.status)}
@@ -199,7 +199,7 @@ export function LabOrderDetailDialog({
           </TabsContent>
 
           {/* Tab Exámenes */}
-          <TabsContent value="tests" className="space-y-4">
+          <TabsContent value="tests" className="space-y-3 sm:space-y-4">
             <div>
               <h3 className="font-semibold mb-3">Exámenes Solicitados</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -227,9 +227,9 @@ export function LabOrderDetailDialog({
           </TabsContent>
 
           {/* Tab Resultados */}
-          <TabsContent value="results" className="space-y-4">
+          <TabsContent value="results" className="space-y-3 sm:space-y-4">
             {order?.results && order.results.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {order.results.map((result: any) => (
                   <div key={result.id} className="border rounded-lg p-4 bg-white">
                     <div className="flex items-center justify-between mb-3">

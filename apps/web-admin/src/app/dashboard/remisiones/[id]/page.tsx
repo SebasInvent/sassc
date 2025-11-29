@@ -133,7 +133,7 @@ export default function RemisionDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -149,7 +149,7 @@ export default function RemisionDetailPage() {
   if (error || !remision) {
     return (
       <div className="text-center py-12">
-        <XCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <XCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-400 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">{error || 'Remisión no encontrada'}</h2>
         <Button onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -164,7 +164,7 @@ export default function RemisionDetailPage() {
   const EstadoIcon = estado.icon;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -174,7 +174,7 @@ export default function RemisionDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">{remision.codigo}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{remision.codigo}</h1>
               <Badge className={prioridad.color}>{prioridad.label}</Badge>
               <Badge className={`${estado.bgColor} ${estado.color}`}>
                 <EstadoIcon className="h-3 w-3 mr-1" />
@@ -287,7 +287,7 @@ export default function RemisionDetailPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Paciente */}
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3">

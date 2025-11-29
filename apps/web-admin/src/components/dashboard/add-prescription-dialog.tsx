@@ -92,7 +92,7 @@ export function AddPrescriptionDialog({
         <DialogHeader>
           <DialogTitle>Prescribir Medicamento</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <Label htmlFor="medicationName">Medicamento *</Label>
             <Input
@@ -104,7 +104,7 @@ export function AddPrescriptionDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="dosage">Dosis *</Label>
               <Input

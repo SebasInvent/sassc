@@ -74,7 +74,7 @@ export function ApproveAuthorizationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -82,7 +82,7 @@ export function ApproveAuthorizationDialog({
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="bg-slate-50 p-4 rounded-lg space-y-2">
             <p className="text-sm"><strong>Paciente:</strong> {authorization?.patient?.firstName} {authorization?.patient?.lastName}</p>
             <p className="text-sm"><strong>Medicamento:</strong> {authorization?.prescription?.medicationName}</p>

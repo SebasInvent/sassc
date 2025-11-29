@@ -84,18 +84,18 @@ export function AddPatientDialog({ onSuccess }: AddPatientDialogProps) {
           Nuevo Paciente
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold">Registrar Nuevo Paciente</DialogTitle>
           <DialogDescription className="text-gray-500">
             Completa la información del paciente para registrarlo en el sistema
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Información Personal */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <h3 className="text-sm font-medium text-gray-900">Información Personal</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-sm text-gray-600">Nombres *</Label>
                 <Input
@@ -122,9 +122,9 @@ export function AddPatientDialog({ onSuccess }: AddPatientDialogProps) {
           </div>
 
           {/* Documento */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <h3 className="text-sm font-medium text-gray-900">Documento de Identidad</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="docType" className="text-sm text-gray-600">Tipo *</Label>
                 <Select value={formData.docType} onValueChange={(value) => setFormData({ ...formData, docType: value })}>
@@ -167,9 +167,9 @@ export function AddPatientDialog({ onSuccess }: AddPatientDialogProps) {
           </div>
 
           {/* Contacto */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <h3 className="text-sm font-medium text-gray-900">Información de Contacto</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm text-gray-600">Email</Label>
                 <Input

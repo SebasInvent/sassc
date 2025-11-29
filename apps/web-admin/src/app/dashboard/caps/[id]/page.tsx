@@ -110,7 +110,7 @@ export default function CapDetailPage() {
       <div className="p-8 max-w-6xl mx-auto">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-16 text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Error</h3>
             <p className="text-gray-500 mb-6">{error || 'CAP no encontrado'}</p>
             <Button onClick={() => router.push('/dashboard/caps')}>
@@ -145,7 +145,7 @@ export default function CapDetailPage() {
           <div className="p-8 bg-gradient-to-r from-blue-50 to-indigo-50">
             <div className="flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="p-4 bg-blue-500 rounded-2xl">
-                <Building2 className="h-10 w-10 text-white" />
+                <Building2 className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
               </div>
               
               <div className="flex-1">
@@ -155,7 +155,7 @@ export default function CapDetailPage() {
                     {cap.activo ? 'Activo' : 'Inactivo'}
                   </Badge>
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">{cap.nombre}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{cap.nombre}</h1>
                 
                 <div className="flex flex-wrap gap-4 text-gray-600 text-sm">
                   <span className="flex items-center gap-1.5">
@@ -201,19 +201,19 @@ export default function CapDetailPage() {
               <p className="text-xs text-gray-500">Ocupación</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{cap._count.pacientes.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{cap._count.pacientes.toLocaleString()}</p>
               <p className="text-xs text-gray-500">Pacientes</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{cap._count.personal}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{cap._count.personal}</p>
               <p className="text-xs text-gray-500">Personal</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{cap._count.citas}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{cap._count.citas}</p>
               <p className="text-xs text-gray-500">Citas</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{cap._count.remisionesOrigen}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{cap._count.remisionesOrigen}</p>
               <p className="text-xs text-gray-500">Remisiones</p>
             </div>
           </div>
@@ -284,7 +284,7 @@ export default function CapDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <Stethoscope className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <Stethoscope className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay personal asignado</p>
                 </div>
               )}
@@ -332,7 +332,7 @@ export default function CapDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <Users className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay pacientes asignados</p>
                 </div>
               )}
@@ -382,7 +382,7 @@ export default function CapDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay citas registradas</p>
                 </div>
               )}
@@ -428,7 +428,7 @@ export default function CapDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <ArrowRightLeft className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <ArrowRightLeft className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay remisiones generadas</p>
                 </div>
               )}

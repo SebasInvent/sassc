@@ -113,7 +113,7 @@ export function AddObservationDialog({ encounterId, appointment, mutate }: AddOb
       <DialogTrigger asChild>
         <Button>Añadir Observación</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Añadir Nueva Observación</DialogTitle>
           <DialogDescription>

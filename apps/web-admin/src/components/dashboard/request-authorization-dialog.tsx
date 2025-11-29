@@ -94,12 +94,12 @@ export function RequestAuthorizationDialog({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">Solicitar Autorización</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Solicitar Autorización de Medicamento</DialogTitle>
           <p className="text-sm text-gray-500 mt-2">{medicationName}</p>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <Label htmlFor="diagnosis">Diagnóstico *</Label>
             <Input
@@ -134,7 +134,7 @@ export function RequestAuthorizationDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="priority">Prioridad *</Label>
               <Select

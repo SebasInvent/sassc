@@ -157,7 +157,7 @@ export default function PatientDetailPage() {
         <Card className="border-0 shadow-sm">
           <CardContent className="p-16 text-center">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="h-8 w-8 text-red-500" />
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Error al cargar</h3>
             <p className="text-gray-500 mb-6">{error.message}</p>
@@ -177,7 +177,7 @@ export default function PatientDetailPage() {
         <Card className="border-0 shadow-sm">
           <CardContent className="p-16 text-center">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="h-8 w-8 text-gray-300" />
+              <User className="h-6 w-6 sm:h-8 sm:w-8 text-gray-300" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Paciente no encontrado</h3>
             <Button onClick={() => router.push('/dashboard/patients')}>
@@ -218,7 +218,7 @@ export default function PatientDetailPage() {
         mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}>
         <CardContent className="p-0">
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col sm:flex-row sm:items-start gap-6">
               {/* Avatar */}
               <div className="w-20 h-20 bg-gray-900 rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
@@ -228,7 +228,7 @@ export default function PatientDetailPage() {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h1 className="text-2xl font-bold text-gray-900">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                     {patient.firstName} {patient.lastName}
                   </h1>
                   {patient.regimen && (
@@ -338,23 +338,23 @@ export default function PatientDetailPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-5 divide-x border-t bg-gray-50/50">
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{stats.appointments}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.appointments}</p>
               <p className="text-xs text-gray-500">Citas</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{stats.conditions}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.conditions}</p>
               <p className="text-xs text-gray-500">Diagnósticos</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{stats.prescriptions}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.prescriptions}</p>
               <p className="text-xs text-gray-500">Prescripciones</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{stats.observations}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.observations}</p>
               <p className="text-xs text-gray-500">Observaciones</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{stats.remisiones}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.remisiones}</p>
               <p className="text-xs text-gray-500">Remisiones</p>
             </div>
           </div>
@@ -480,7 +480,7 @@ export default function PatientDetailPage() {
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-400">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No hay citas programadas</p>
                   </div>
                 )}
@@ -512,7 +512,7 @@ export default function PatientDetailPage() {
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-400">
-                    <Stethoscope className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <Stethoscope className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No hay condiciones registradas</p>
                   </div>
                 )}
@@ -540,7 +540,7 @@ export default function PatientDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <Activity className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No hay observaciones registradas</p>
                 </div>
               )}
@@ -599,7 +599,7 @@ export default function PatientDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <ArrowRightLeft className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <ArrowRightLeft className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p className="mb-2">No hay remisiones registradas</p>
                   <p className="text-sm">Las remisiones a especialistas aparecerán aquí</p>
                 </div>
@@ -656,7 +656,7 @@ export default function PatientDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay citas registradas</p>
                 </div>
               )}
@@ -672,7 +672,7 @@ export default function PatientDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="text-center py-12 text-gray-400">
-                <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <FileText className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                 <p className="mb-4">La historia clínica detallada estará disponible próximamente</p>
                 <Button variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
@@ -702,7 +702,7 @@ export default function PatientDetailPage() {
                         <Heart className="h-5 w-5 text-gray-600" />
                       </div>
                       <p className="text-xs text-gray-500 mb-1">{obs.code}</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                         {obs.valueQuantity}
                       </p>
                       <p className="text-xs text-gray-400">{obs.valueUnit}</p>
@@ -711,7 +711,7 @@ export default function PatientDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <Activity className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay signos vitales registrados</p>
                 </div>
               )}

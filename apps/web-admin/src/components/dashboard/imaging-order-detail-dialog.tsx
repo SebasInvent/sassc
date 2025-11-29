@@ -74,7 +74,7 @@ export function ImagingOrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export function ImagingOrderDetailDialog({
           </TabsList>
 
           {/* Tab General */}
-          <TabsContent value="general" className="space-y-4">
+          <TabsContent value="general" className="space-y-3 sm:space-y-4">
             {/* Estado */}
             <div className="p-4 border rounded-lg bg-slate-50">
               <div className="flex items-center gap-2 mb-2">
@@ -171,7 +171,7 @@ export function ImagingOrderDetailDialog({
           </TabsContent>
 
           {/* Tab Estudio */}
-          <TabsContent value="study" className="space-y-4">
+          <TabsContent value="study" className="space-y-3 sm:space-y-4">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
               <div className="flex items-center gap-4">
                 <div className="text-5xl">
@@ -209,7 +209,7 @@ export function ImagingOrderDetailDialog({
           </TabsContent>
 
           {/* Tab Reporte */}
-          <TabsContent value="report" className="space-y-4">
+          <TabsContent value="report" className="space-y-3 sm:space-y-4">
             {hasResult ? (
               <>
                 {/* Información del Reporte */}

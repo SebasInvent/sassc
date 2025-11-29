@@ -120,16 +120,16 @@ export default function AppointmentDetailPage() {
     return date.toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' });
   };
 
-  if (authLoading || isLoading) return <div className="p-8">Cargando...</div>;
+  if (authLoading || isLoading) return <div className="p-4 sm:p-6 lg:p-8">Cargando...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
-  if (!appointment) return <div className="p-8">No se encontró la cita.</div>;
+  if (!appointment) return <div className="p-4 sm:p-6 lg:p-8">No se encontró la cita.</div>;
 
   return (
     <div className="container mx-auto p-8 space-y-8">
       <header className="flex justify-between items-start">
         <div>
           <Link href="/dashboard" className="text-blue-500 hover:underline mb-4 block">{'< Volver al Dashboard'}</Link>
-          <h1 className="text-3xl font-bold">Ficha de la Cita</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Ficha de la Cita</h1>
           <p className="text-gray-500">{formatDateTime(appointment.start)}</p>
           {appointment.encounter && <EncounterTimer start={appointment.encounter.start} end={appointment.encounter.end} />}
         </div>
@@ -154,7 +154,7 @@ export default function AppointmentDetailPage() {
         <CardHeader>
           <CardTitle>Información General</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div><strong>Paciente:</strong> {`${appointment.patient.firstName} ${appointment.patient.lastName}`}</div>
           <div><strong>Documento:</strong> {appointment.patient.docNumber}</div>
           <div><strong>Modalidad:</strong> <Badge variant="outline">{appointment.modality}</Badge></div>

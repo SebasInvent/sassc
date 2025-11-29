@@ -115,7 +115,7 @@ export default function IpsDetailPage() {
       <div className="p-8 max-w-6xl mx-auto">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-16 text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Error</h3>
             <p className="text-gray-500 mb-6">{error || 'IPS no encontrada'}</p>
             <Button onClick={() => router.push('/dashboard/ips')}>
@@ -147,7 +147,7 @@ export default function IpsDetailPage() {
           <div className="p-8 bg-gradient-to-r from-purple-50 to-pink-50">
             <div className="flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="p-4 bg-purple-500 rounded-2xl">
-                <Hospital className="h-10 w-10 text-white" />
+                <Hospital className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
               </div>
               
               <div className="flex-1">
@@ -161,7 +161,7 @@ export default function IpsDetailPage() {
                     {ips.activo ? 'Activa' : 'Inactiva'}
                   </Badge>
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">{ips.nombre}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{ips.nombre}</h1>
                 <p className="text-gray-500 capitalize mb-3">{ips.tipo}</p>
                 
                 <div className="flex flex-wrap gap-4 text-gray-600 text-sm">
@@ -199,28 +199,28 @@ export default function IpsDetailPage() {
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Bed className="h-4 w-4 text-gray-400" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{ips.numeroCamas || '-'}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{ips.numeroCamas || '-'}</p>
               <p className="text-xs text-gray-500">Camas</p>
             </div>
             <div className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Stethoscope className="h-4 w-4 text-gray-400" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{ips.numeroQuirofanos || '-'}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{ips.numeroQuirofanos || '-'}</p>
               <p className="text-xs text-gray-500">Quirófanos</p>
             </div>
             <div className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Activity className="h-4 w-4 text-gray-400" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{ips.numeroUCI || '-'}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{ips.numeroUCI || '-'}</p>
               <p className="text-xs text-gray-500">UCI</p>
             </div>
             <div className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <ArrowRightLeft className="h-4 w-4 text-gray-400" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{ips._count.remisionesDestino}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{ips._count.remisionesDestino}</p>
               <p className="text-xs text-gray-500">Remisiones</p>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function IpsDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <Users className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay personal asignado</p>
                 </div>
               )}
@@ -342,7 +342,7 @@ export default function IpsDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <ArrowRightLeft className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <ArrowRightLeft className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-50" />
                   <p>No hay remisiones recibidas</p>
                 </div>
               )}

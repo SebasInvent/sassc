@@ -66,7 +66,7 @@ export function DeletePatientDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[400px]">
         <DialogHeader className="text-center pb-4">
           <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="h-8 w-8 text-red-500" />

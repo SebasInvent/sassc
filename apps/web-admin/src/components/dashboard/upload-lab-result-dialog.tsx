@@ -136,7 +136,7 @@ export function UploadLabResultDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileUp className="h-6 w-6" />
@@ -170,7 +170,7 @@ export function UploadLabResultDialog({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {/* Seleccionar Examen Pendiente */}
           <div>
             <Label>Seleccionar Examen *</Label>
@@ -212,7 +212,7 @@ export function UploadLabResultDialog({
               </div>
 
               {/* Resultado y Unidad */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label htmlFor="result">Resultado *</Label>
                   <Input
@@ -279,7 +279,7 @@ export function UploadLabResultDialog({
               </div>
 
               {/* Fecha y Reportado Por */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label htmlFor="resultDate">Fecha del Resultado *</Label>
                   <Input

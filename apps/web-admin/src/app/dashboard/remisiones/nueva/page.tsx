@@ -250,7 +250,7 @@ export default function NuevaRemisionPage() {
           Volver
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nueva Remisión</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Nueva Remisión</h1>
           <p className="text-gray-500">Crear una nueva remisión de paciente</p>
         </div>
       </div>
@@ -287,11 +287,11 @@ export default function NuevaRemisionPage() {
 
       {/* Step Content */}
       <Card className="border-0 shadow-sm">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           
           {/* Step 1: Seleccionar Paciente */}
           {step === 'paciente' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div>
                 <Label className="text-lg font-semibold">Buscar Paciente</Label>
                 <p className="text-gray-500 text-sm mb-4">Busque por nombre o número de documento</p>
@@ -355,7 +355,7 @@ export default function NuevaRemisionPage() {
 
           {/* Step 2: Diagnóstico */}
           {step === 'diagnostico' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="p-4 bg-blue-50 rounded-xl flex items-center gap-3">
                 <User className="h-5 w-5 text-blue-600" />
                 <div>
@@ -430,7 +430,7 @@ export default function NuevaRemisionPage() {
 
           {/* Step 3: Seleccionar IPS */}
           {step === 'ips' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="p-4 bg-purple-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <Stethoscope className="h-5 w-5 text-purple-600" />
@@ -448,7 +448,7 @@ export default function NuevaRemisionPage() {
 
               {searchingIps ? (
                 <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+                  <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto text-blue-600" />
                   <p className="text-gray-500 mt-2">Buscando IPS disponibles...</p>
                 </div>
               ) : (
@@ -489,16 +489,16 @@ export default function NuevaRemisionPage() {
 
           {/* Step 4: Confirmar */}
           {step === 'confirmar' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-                  <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                  <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Confirmar Remisión</h2>
                 <p className="text-gray-500">Revise los datos antes de crear la remisión</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Paciente */}
                 <div className="p-4 bg-blue-50 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">

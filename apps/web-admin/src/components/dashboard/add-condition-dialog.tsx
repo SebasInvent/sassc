@@ -77,7 +77,7 @@ export function AddConditionDialog({ encounterId, onConditionAdded }: AddConditi
       <DialogTrigger asChild>
         <Button>Añadir Diagnóstico</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Añadir Nuevo Diagnóstico</DialogTitle>
           <DialogDescription>
