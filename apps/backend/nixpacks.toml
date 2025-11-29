@@ -2,10 +2,10 @@
 nixPkgs = ["openssl"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
-cmds = ["npx prisma generate", "npm run build"]
+cmds = ["pnpm --filter backend exec prisma generate", "pnpm --filter backend build"]
 
 [start]
-cmd = "node dist/src/main.js"
+cmd = "cd apps/backend && npx prisma migrate deploy && npx prisma generate && node dist/src/main.js"
