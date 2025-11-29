@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserMenu } from '@/components/UserMenu';
 import { NotificationsBell } from '@/components/dashboard/notifications-bell';
 import { 
@@ -29,6 +29,8 @@ import {
   FileCheck,
   Activity,
   Scan,
+  Menu,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -219,15 +221,48 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
+
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Cerrar sidebar al navegar en móvil
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [pathname, isMobile]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
-      {/* Sidebar - Diseño elegante y amplio */}
+      {/* Overlay para móvil */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
       <aside className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-white border-r border-gray-100 shadow-xl transition-all duration-300 flex flex-col",
-        sidebarOpen ? "w-72" : "w-20"
+        "fixed left-0 top-0 z-50 h-screen bg-white border-r border-gray-100 shadow-xl transition-all duration-300 flex flex-col",
+        // En móvil: oculto por defecto, visible cuando está abierto
+        isMobile ? (sidebarOpen ? "translate-x-0 w-72" : "-translate-x-full w-72") : (sidebarOpen ? "w-72" : "w-20")
       )}>
         {/* Logo Header */}
         <div className="h-20 flex items-center justify-between px-5 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-cyan-600">
@@ -363,26 +398,40 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className={cn(
         "transition-all duration-300",
-        sidebarOpen ? "ml-72" : "ml-20"
+        // En móvil no hay margen, en desktop depende del sidebar
+        isMobile ? "ml-0" : (sidebarOpen ? "lg:ml-72" : "lg:ml-20")
       )}>
-        {/* Top Header - Más elegante */}
+        {/* Top Header - Responsive */}
         <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
-          <div className="px-8 py-4">
+          <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Breadcrumb placeholder */}
+              <div className="flex items-center gap-3">
+                {/* Hamburger Menu - Solo móvil */}
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+                >
+                  {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+                {/* Logo en móvil */}
+                <div className="lg:hidden flex items-center gap-2">
+                  <div className="p-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg">
+                    <Stethoscope className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="font-bold text-gray-900">SASSC</span>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <NotificationsBell />
-                <div className="h-8 w-px bg-gray-200" />
+                <div className="hidden sm:block h-8 w-px bg-gray-200" />
                 <UserMenu />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-8 min-h-[calc(100vh-73px)]">
+        {/* Page Content - Responsive padding */}
+        <main className="p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-73px)]">
           {children}
         </main>
       </div>
