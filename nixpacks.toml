@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs_18", "nodePackages.pnpm", "openssl"]
-
-[start]
-cmd = "cd apps/backend && node dist/src/main.js"
