@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import useSWR from 'swr';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { API_URL } from '@/lib/api';
 
 const fetcher = async (url: string, token: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -25,7 +26,7 @@ export function CriticalStockWidget() {
   const { token } = useAuth();
 
   const { data: lowStock, isLoading } = useSWR<InventoryItem[]>(
-    token ? 'http://localhost:3001/fhir/Inventory/low-stock' : null,
+    token ? '${API_URL}/fhir/Inventory/low-stock' : null,
     (url: string) => fetcher(url, token!)
   );
 

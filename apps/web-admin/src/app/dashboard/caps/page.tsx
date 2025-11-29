@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Filter,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface CAP {
   id: string;
@@ -69,7 +70,7 @@ export default function CapsPage() {
 
   const fetchCaps = async () => {
     try {
-      const response = await fetch('http://localhost:3001/caps', {
+      const response = await fetch('${API_URL}/caps', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -85,7 +86,7 @@ export default function CapsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:3001/caps/stats', {
+      const response = await fetch('${API_URL}/caps/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

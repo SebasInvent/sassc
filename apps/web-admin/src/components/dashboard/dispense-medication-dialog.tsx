@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 
 interface DispenseMedicationDialogProps {
   prescriptionId: string;
@@ -49,7 +50,7 @@ export function DispenseMedicationDialog({
         status: formData.status
       };
 
-      const res = await fetch('http://localhost:3001/fhir/MedicationDispense', {
+      const res = await fetch('${API_URL}/fhir/MedicationDispense', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

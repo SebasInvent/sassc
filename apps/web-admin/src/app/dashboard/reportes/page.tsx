@@ -23,6 +23,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { API_URL } from '@/lib/api';
 import {
   TrendingUp,
   Users,
@@ -71,12 +72,12 @@ export default function ReportesPage() {
         firmasRes,
         capsRes,
       ] = await Promise.all([
-        fetch('http://localhost:3001/fhir/Patient', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/remisiones/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/financiero/stats', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null),
-        fetch('http://localhost:3001/preventivo/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/firma-biometrica/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/caps/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/fhir/Patient', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/remisiones/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/financiero/stats', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null),
+        fetch('${API_URL}/preventivo/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/firma-biometrica/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/caps/stats', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       const patients = patientsRes.ok ? await patientsRes.json() : [];

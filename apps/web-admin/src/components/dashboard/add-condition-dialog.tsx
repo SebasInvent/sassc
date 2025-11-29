@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { API_URL } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -42,7 +43,7 @@ export function AddConditionDialog({ encounterId, onConditionAdded }: AddConditi
     }
 
     try {
-      const response = await fetch('http://localhost:3001/fhir/Condition', {
+      const response = await fetch('${API_URL}/fhir/Condition', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

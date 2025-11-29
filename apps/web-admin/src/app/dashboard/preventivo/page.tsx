@@ -19,6 +19,7 @@ import {
   RefreshCw,
   ChevronRight,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface Programa {
@@ -89,13 +90,13 @@ export default function PreventivoPage() {
     setLoading(true);
     try {
       const [programasRes, alertasRes, statsRes] = await Promise.all([
-        fetch('http://localhost:3001/preventivo/programas', {
+        fetch('${API_URL}/preventivo/programas', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/preventivo/alertas', {
+        fetch('${API_URL}/preventivo/alertas', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/preventivo/stats', {
+        fetch('${API_URL}/preventivo/stats', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -116,7 +117,7 @@ export default function PreventivoPage() {
 
   const completarSeguimiento = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/preventivo/seguimientos/${id}/completar`, {
+      const res = await fetch(`${API_URL}/preventivo/seguimientos/${id}/completar`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

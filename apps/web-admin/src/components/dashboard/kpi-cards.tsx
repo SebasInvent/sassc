@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, Stethoscope } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 
 interface KpiData {
   totalPatients: number;
@@ -25,7 +26,7 @@ export function KpiCards() {
 
     async function fetchKpis() {
       try {
-        const response = await fetch('http://localhost:3001/dashboard/kpis', {
+        const response = await fetch('${API_URL}/dashboard/kpis', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

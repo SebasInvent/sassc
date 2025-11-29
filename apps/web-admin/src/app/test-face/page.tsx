@@ -8,6 +8,7 @@ import {
   euclideanDistance,
   stringToDescriptor 
 } from '@/lib/faceRecognition';
+import { API_URL } from '@/lib/api';
 
 export default function TestFacePage() {
   const [status, setStatus] = useState('Iniciando...');
@@ -35,7 +36,7 @@ export default function TestFacePage() {
     try {
       // Cargar usuarios registrados
       log('📋 Cargando usuarios registrados...');
-      const res = await fetch('http://localhost:3001/auth/registered-faces');
+      const res = await fetch('${API_URL}/auth/registered-faces');
       const data = await res.json();
       setRegisteredUsers(data.users || []);
       log(`✅ ${data.count} usuarios con rostro registrado`);

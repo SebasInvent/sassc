@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { DispenseMedicationDialog } from '@/components/dashboard/dispense-medication-dialog';
 import { CreatePrescriptionDialog } from '@/components/dashboard/create-prescription-dialog';
 import { Pill, Package, CheckCircle2, Search, Filter } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 // --- SWR Fetcher ---
 const fetcher = async (url: string, token: string) => {
@@ -53,14 +54,14 @@ export default function PharmacyPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active');
 
-  const apiUrl = 'http://localhost:3001/fhir/MedicationRequest';
+  const apiUrl = '${API_URL}/fhir/MedicationRequest';
   const { data: prescriptions, error, isLoading, mutate } = useSWR<Prescription[]>(
     token ? apiUrl : null,
     (url: string) => fetcher(url, token!)
   );
 
   const { data: dispensations } = useSWR<any[]>(
-    token ? 'http://localhost:3001/fhir/MedicationDispense' : null,
+    token ? '${API_URL}/fhir/MedicationDispense' : null,
     (url: string) => fetcher(url, token!)
   );
 

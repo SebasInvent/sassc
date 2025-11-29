@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { CheckCircle2 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface ApproveAuthorizationDialogProps {
   open: boolean;
@@ -40,7 +41,7 @@ export function ApproveAuthorizationDialog({
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + Number(formData.validDays));
 
-      const res = await fetch(`http://localhost:3001/fhir/Authorization/${authorization.id}/approve`, {
+      const res = await fetch(`${API_URL}/fhir/Authorization/${authorization.id}/approve`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

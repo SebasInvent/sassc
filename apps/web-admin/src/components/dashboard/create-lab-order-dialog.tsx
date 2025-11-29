@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { Plus, X, Beaker } from 'lucide-react';
 import useSWR from 'swr';
+import { API_URL } from '@/lib/api';
 
 const fetcher = async (url: string, token: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -59,7 +60,7 @@ export function CreateLabOrderDialog({
   const [customTest, setCustomTest] = useState('');
 
   const { data: patients } = useSWR(
-    token ? 'http://localhost:3001/fhir/Patient' : null,
+    token ? '${API_URL}/fhir/Patient' : null,
     (url: string) => fetcher(url, token!)
   );
 
@@ -96,7 +97,7 @@ export function CreateLabOrderDialog({
 
     try {
       // Crear un encounter simple primero
-      const encounterRes = await fetch('http://localhost:3001/fhir/Encounter', {
+      const encounterRes = await fetch('${API_URL}/fhir/Encounter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +124,7 @@ export function CreateLabOrderDialog({
         status: 'pending'
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Laboratory/order', {
+      const res = await fetch('${API_URL}/fhir/Laboratory/order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

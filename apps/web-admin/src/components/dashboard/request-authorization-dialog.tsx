@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 
 interface RequestAuthorizationDialogProps {
   prescriptionId: string;
@@ -56,7 +57,7 @@ export function RequestAuthorizationDialog({
         notes: formData.notes || null
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Authorization', {
+      const res = await fetch('${API_URL}/fhir/Authorization', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

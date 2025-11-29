@@ -20,6 +20,7 @@ import {
   AlertCircle,
   FileUp
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import { CreateLabOrderDialog } from '@/components/dashboard/create-lab-order-dialog';
 import { UploadLabResultDialog } from '@/components/dashboard/upload-lab-result-dialog';
 import { LabOrderDetailDialog } from '@/components/dashboard/lab-order-detail-dialog';
@@ -64,7 +65,7 @@ export default function LaboratoryPage() {
   const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
 
   const { data: orders, isLoading, mutate } = useSWR<LabOrder[]>(
-    token ? 'http://localhost:3001/fhir/Laboratory/orders' : null,
+    token ? '${API_URL}/fhir/Laboratory/orders' : null,
     (url: string) => fetcher(url, token!)
   );
 

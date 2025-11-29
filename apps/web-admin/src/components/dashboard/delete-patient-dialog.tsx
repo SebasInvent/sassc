@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { API_URL } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, User } from 'lucide-react';
 import { toast } from 'sonner';
@@ -41,7 +42,7 @@ export function DeletePatientDialog({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/fhir/Patient/${patient.id}`, {
+      const response = await fetch(`${API_URL}/fhir/Patient/${patient.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

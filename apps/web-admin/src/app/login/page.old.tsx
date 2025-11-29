@@ -51,7 +51,7 @@ export default function LoginPage() {
 
   const loadRegisteredFaces = async () => {
     try {
-      const response = await fetch('http://localhost:3001/auth/registered-faces');
+      const response = await fetch('${API_URL}/auth/registered-faces');
       if (response.ok) {
         const data = await response.json();
         console.log(`📋 ${data.count} usuarios con rostro registrado`);
@@ -71,7 +71,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch('${API_URL}/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ license }),
@@ -111,7 +111,7 @@ export default function LoginPage() {
       setStep('logging_in');
       
       try {
-        const response = await fetch('http://localhost:3001/auth/login', {
+        const response = await fetch('${API_URL}/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ license: user.license }),

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { dateUtils } from '@/lib/date-utils';
 import { UserPlus, Loader2 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface AddPatientDialogProps {
   onSuccess?: () => void;
@@ -40,7 +41,7 @@ export function AddPatientDialog({ onSuccess }: AddPatientDialogProps) {
         birthDate: dateUtils.toISO(formData.birthDate)
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Patient', {
+      const res = await fetch('${API_URL}/fhir/Patient', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

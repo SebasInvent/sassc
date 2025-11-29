@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 
 interface AddInventoryDialogProps {
   onSuccess?: () => void;
@@ -54,7 +55,7 @@ export function AddInventoryDialog({ onSuccess }: AddInventoryDialogProps) {
         lastRestockDate: new Date().toISOString()
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Inventory', {
+      const res = await fetch('${API_URL}/fhir/Inventory', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

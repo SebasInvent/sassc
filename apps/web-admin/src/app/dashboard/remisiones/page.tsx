@@ -21,6 +21,7 @@ import {
   Hospital,
   Filter,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface Remision {
   id: string;
@@ -92,7 +93,7 @@ export default function RemisionesPage() {
 
   const fetchRemisiones = async () => {
     try {
-      const response = await fetch('http://localhost:3001/remisiones', {
+      const response = await fetch('${API_URL}/remisiones', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -108,7 +109,7 @@ export default function RemisionesPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:3001/remisiones/stats', {
+      const response = await fetch('${API_URL}/remisiones/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

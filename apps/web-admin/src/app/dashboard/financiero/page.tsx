@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { API_URL } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -132,7 +133,7 @@ export default function FinancieroPage() {
     setLoading(true);
     try {
       // Obtener estadísticas
-      const statsRes = await fetch('http://localhost:3001/adres/estadisticas', {
+      const statsRes = await fetch('${API_URL}/adres/estadisticas', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (statsRes.ok) {
@@ -141,7 +142,7 @@ export default function FinancieroPage() {
       }
 
       // Obtener pagos
-      const pagosRes = await fetch('http://localhost:3001/adres/pagos', {
+      const pagosRes = await fetch('${API_URL}/adres/pagos', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (pagosRes.ok) {
@@ -150,7 +151,7 @@ export default function FinancieroPage() {
       }
 
       // Obtener lista de IPS
-      const ipsRes = await fetch('http://localhost:3001/ips', {
+      const ipsRes = await fetch('${API_URL}/ips', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (ipsRes.ok) {
@@ -176,7 +177,7 @@ export default function FinancieroPage() {
     }
 
     try {
-      const res = await fetch('http://localhost:3001/adres/pagos', {
+      const res = await fetch('${API_URL}/adres/pagos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +222,7 @@ export default function FinancieroPage() {
     
     setProcesando(pagoAFirmar.id);
     try {
-      const res = await fetch(`http://localhost:3001/adres/pagos/${pagoAFirmar.id}/procesar`, {
+      const res = await fetch(`${API_URL}/adres/pagos/${pagoAFirmar.id}/procesar`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +250,7 @@ export default function FinancieroPage() {
   const rechazarPago = async (id: string) => {
     setProcesando(id);
     try {
-      const res = await fetch(`http://localhost:3001/adres/pagos/${id}/procesar`, {
+      const res = await fetch(`${API_URL}/adres/pagos/${id}/procesar`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

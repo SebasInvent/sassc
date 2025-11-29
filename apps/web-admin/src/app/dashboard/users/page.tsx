@@ -23,6 +23,7 @@ import {
   Trash2,
   ArrowLeft
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 const fetcher = async (url: string, token: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -57,7 +58,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: users, isLoading, mutate } = useSWR(
-    token ? 'http://localhost:3001/users' : null,
+    token ? '${API_URL}/users' : null,
     (url: string) => fetcher(url, token!)
   );
 

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { XCircle } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface DenyAuthorizationDialogProps {
   open: boolean;
@@ -31,7 +32,7 @@ export function DenyAuthorizationDialog({
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:3001/fhir/Authorization/${authorization.id}/deny`, {
+      const res = await fetch(`${API_URL}/fhir/Authorization/${authorization.id}/deny`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

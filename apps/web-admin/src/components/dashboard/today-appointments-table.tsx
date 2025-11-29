@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { API_URL } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +46,7 @@ export function TodayAppointmentsTable() {
 
     async function fetchTodaysAppointments() {
       try {
-        const response = await fetch('http://localhost:3001/fhir/Appointment/today', {
+        const response = await fetch('${API_URL}/fhir/Appointment/today', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

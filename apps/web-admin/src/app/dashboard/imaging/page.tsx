@@ -20,6 +20,7 @@ import {
   AlertCircle,
   FileUp
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import { CreateImagingOrderDialog } from '@/components/dashboard/create-imaging-order-dialog';
 import { UploadImagingResultDialog } from '@/components/dashboard/upload-imaging-result-dialog';
 import { ImagingOrderDetailDialog } from '@/components/dashboard/imaging-order-detail-dialog';
@@ -67,7 +68,7 @@ export default function ImagingPage() {
   const [selectedOrder, setSelectedOrder] = useState<ImagingOrder | null>(null);
 
   const { data: orders, isLoading, mutate } = useSWR<ImagingOrder[]>(
-    token ? 'http://localhost:3001/fhir/Imaging/orders' : null,
+    token ? '${API_URL}/fhir/Imaging/orders' : null,
     (url: string) => fetcher(url, token!)
   );
 

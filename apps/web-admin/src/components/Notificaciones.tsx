@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { API_URL } from '@/lib/api';
 import {
   Bell,
   AlertTriangle,
@@ -81,10 +82,10 @@ export function NotificacionesBell() {
     setLoading(true);
     try {
       const [notifRes, resumenRes] = await Promise.all([
-        fetch('http://localhost:3001/notificaciones', {
+        fetch('${API_URL}/notificaciones', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/notificaciones/resumen', {
+        fetch('${API_URL}/notificaciones/resumen', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -114,7 +115,7 @@ export function NotificacionesBell() {
 
   const marcarTodasLeidas = async () => {
     try {
-      await fetch('http://localhost:3001/notificaciones/leer-todas', {
+      await fetch('${API_URL}/notificaciones/leer-todas', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

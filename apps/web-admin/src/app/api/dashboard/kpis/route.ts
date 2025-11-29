@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import { API_URL } from '@/lib/api';
 
 export async function GET() {
   const headersList = await headers();
@@ -11,7 +12,7 @@ export async function GET() {
 
   try {
     // Reenviar la petición al backend con el token
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.BACKEND_URL || '${API_URL}';
     const backendResponse = await fetch(`${backendUrl}/dashboard/kpis`, {
       headers: {
         Authorization: authorization,

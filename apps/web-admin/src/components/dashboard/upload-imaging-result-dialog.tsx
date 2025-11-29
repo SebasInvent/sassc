@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { FileUp, Image as ImageIcon } from 'lucide-react';
 import { dateUtils } from '@/lib/date-utils';
+import { API_URL } from '@/lib/api';
 
 interface UploadImagingResultDialogProps {
   open: boolean;
@@ -65,7 +66,7 @@ export function UploadImagingResultDialog({
         reportedBy: formData.reportedBy || 'Radiologist'
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Imaging/result', {
+      const res = await fetch('${API_URL}/fhir/Imaging/result', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

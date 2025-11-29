@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   TrendingUp,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface Resumen {
@@ -69,16 +70,16 @@ export default function AuditoriaPage() {
 
     try {
       const [resumenRes, timelineRes, firmasRes, pagosRes] = await Promise.all([
-        fetch('http://localhost:3001/auditoria/resumen', {
+        fetch('${API_URL}/auditoria/resumen', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/auditoria/timeline?limit=30', {
+        fetch('${API_URL}/auditoria/timeline?limit=30', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/auditoria/firmas?limit=20', {
+        fetch('${API_URL}/auditoria/firmas?limit=20', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/auditoria/pagos?limit=20', {
+        fetch('${API_URL}/auditoria/pagos?limit=20', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

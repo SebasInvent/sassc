@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { API_URL } from '@/lib/api';
 import useSWR from 'swr';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -37,7 +38,7 @@ export function NotificationsBell() {
 
   // Notificaciones del sistema SASSC
   const { data: resumen } = useSWR(
-    token ? 'http://localhost:3001/notificaciones/resumen' : null,
+    token ? '${API_URL}/notificaciones/resumen' : null,
     (url: string) => fetcher(url, token!),
     {
       revalidateOnFocus: false,

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 
 interface AddPrescriptionDialogProps {
   open: boolean;
@@ -55,7 +56,7 @@ export function AddPrescriptionDialog({
         status: 'active'
       };
 
-      const res = await fetch('http://localhost:3001/fhir/MedicationRequest', {
+      const res = await fetch('${API_URL}/fhir/MedicationRequest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

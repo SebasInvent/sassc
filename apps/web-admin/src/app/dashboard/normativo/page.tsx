@@ -21,6 +21,7 @@ import {
   TrendingUp,
   XCircle,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface Stats {
@@ -44,13 +45,13 @@ export default function NormativoPage() {
 
     try {
       const [ripsStats, mipresStats, consentStats, factStats, ripsList, mipresList, facturasList] = await Promise.all([
-        fetch('http://localhost:3001/rips/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/mipres/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/consentimiento/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/facturacion/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/rips?limit=20', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/mipres?limit=20', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:3001/facturacion?limit=20', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/rips/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/mipres/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/consentimiento/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/facturacion/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/rips?limit=20', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/mipres?limit=20', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('${API_URL}/facturacion?limit=20', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       const ripsData = ripsStats.ok ? await ripsStats.json() : {};

@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { API_URL } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -71,7 +72,7 @@ export function AddObservationDialog({ encounterId, appointment, mutate }: AddOb
       resetForm();
 
       // Send the request to the server
-      const response = await fetch('http://localhost:3001/fhir/Observation', {
+      const response = await fetch('${API_URL}/fhir/Observation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -27,6 +27,7 @@ import {
   UserCheck,
   Filter
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 // --- SWR Fetcher ---
 const fetcher = async (url: string, token: string) => {
@@ -64,8 +65,8 @@ export default function PatientsPage() {
   }, []);
 
   const apiUrl = searchTerm 
-    ? `http://localhost:3001/fhir/Patient?search=${searchTerm}`
-    : 'http://localhost:3001/fhir/Patient';
+    ? `${API_URL}/fhir/Patient?search=${searchTerm}`
+    : '${API_URL}/fhir/Patient';
   
   const { data: patients, error, isLoading, mutate } = useSWR<Patient[]>(
     token ? apiUrl : null,

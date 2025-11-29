@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { FileUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { dateUtils } from '@/lib/date-utils';
+import { API_URL } from '@/lib/api';
 
 interface UploadLabResultDialogProps {
   open: boolean;
@@ -96,7 +97,7 @@ export function UploadLabResultDialog({
         reportedBy: formData.reportedBy || 'Lab Technician'
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Laboratory/result', {
+      const res = await fetch('${API_URL}/fhir/Laboratory/result', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

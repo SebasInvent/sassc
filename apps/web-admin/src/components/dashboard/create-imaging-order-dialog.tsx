@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { Plus, Scan } from 'lucide-react';
 import useSWR from 'swr';
+import { API_URL } from '@/lib/api';
 
 const fetcher = async (url: string, token: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -52,7 +53,7 @@ export function CreateImagingOrderDialog({
   const [loading, setLoading] = useState(false);
 
   const { data: patients } = useSWR(
-    token ? 'http://localhost:3001/fhir/Patient' : null,
+    token ? '${API_URL}/fhir/Patient' : null,
     (url: string) => fetcher(url, token!)
   );
 
@@ -77,7 +78,7 @@ export function CreateImagingOrderDialog({
 
     try {
       // Crear un encounter simple primero
-      const encounterRes = await fetch('http://localhost:3001/fhir/Encounter', {
+      const encounterRes = await fetch('${API_URL}/fhir/Encounter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ export function CreateImagingOrderDialog({
         status: 'pending'
       };
 
-      const res = await fetch('http://localhost:3001/fhir/Imaging/order', {
+      const res = await fetch('${API_URL}/fhir/Imaging/order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

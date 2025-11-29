@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { ModernDataTable } from '@/components/ModernDataTable';
+import { API_URL } from '@/lib/api';
 
 const fetcher = async (url: string, token: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -37,7 +38,7 @@ export default function AppointmentsPage() {
   const [filter, setFilter] = useState<'all' | 'today' | 'upcoming'>('all');
 
   const { data: appointments, isLoading, mutate } = useSWR<Appointment[]>(
-    token ? 'http://localhost:3001/fhir/Appointment' : null,
+    token ? '${API_URL}/fhir/Appointment' : null,
     (url: string) => fetcher(url, token!)
   );
 

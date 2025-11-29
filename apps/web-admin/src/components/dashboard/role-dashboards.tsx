@@ -23,6 +23,7 @@ import {
   ArrowRight,
   Plus,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 // ============================================
 // DASHBOARD PARA MÉDICO DE CAP
@@ -44,10 +45,10 @@ export function MedicoCapDashboard() {
     try {
       // Obtener estadísticas del CAP del médico
       const [remisionesRes, citasRes] = await Promise.all([
-        fetch('http://localhost:3001/remisiones?estado=SOLICITADA', {
+        fetch('${API_URL}/remisiones?estado=SOLICITADA', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/fhir/Appointment', {
+        fetch('${API_URL}/fhir/Appointment', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -190,10 +191,10 @@ export function DirectorIpsDashboard() {
   const fetchData = async () => {
     try {
       const [remisionesRes, statsRes] = await Promise.all([
-        fetch('http://localhost:3001/remisiones', {
+        fetch('${API_URL}/remisiones', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/remisiones/stats', {
+        fetch('${API_URL}/remisiones/stats', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -380,16 +381,16 @@ export function AdminDashboard() {
   const fetchData = async () => {
     try {
       const [kpisRes, remisionesStatsRes, capsRes, ipsRes] = await Promise.all([
-        fetch('http://localhost:3001/dashboard/kpis', {
+        fetch('${API_URL}/dashboard/kpis', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/remisiones/stats', {
+        fetch('${API_URL}/remisiones/stats', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/caps/stats', {
+        fetch('${API_URL}/caps/stats', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/ips/stats', {
+        fetch('${API_URL}/ips/stats', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

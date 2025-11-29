@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, AlertTriangle, Package, ArrowLeft, Calendar, DollarSign } from 'lucide-react';
 import { UserMenu } from '@/components/UserMenu';
 import { NotificationsBell } from '@/components/dashboard/notifications-bell';
+import { API_URL } from '@/lib/api';
 
 // --- SWR Fetcher ---
 const fetcher = async (url: string, token: string) => {
@@ -43,7 +44,7 @@ type InventoryItem = {
 export default function InventoryPage() {
   const { token } = useAuth();
 
-  const apiUrl = 'http://localhost:3001/fhir/Inventory';
+  const apiUrl = '${API_URL}/fhir/Inventory';
   const { data: inventory, error, isLoading, mutate } = useSWR<InventoryItem[]>(
     token ? apiUrl : null,
     (url: string) => fetcher(url, token!)

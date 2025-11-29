@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { Plus } from 'lucide-react';
 import useSWR from 'swr';
+import { API_URL } from '@/lib/api';
 
 const fetcher = async (url: string, token: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -28,7 +29,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
 
   // Cargar pacientes
   const { data: patients } = useSWR(
-    token ? 'http://localhost:3001/fhir/Patient' : null,
+    token ? '${API_URL}/fhir/Patient' : null,
     (url: string) => fetcher(url, token!)
   );
 
@@ -48,7 +49,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
 
     try {
       // Crear un encounter simple primero
-      const encounterRes = await fetch('http://localhost:3001/fhir/Encounter', {
+      const encounterRes = await fetch('${API_URL}/fhir/Encounter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
         status: 'active'
       };
 
-      const res = await fetch('http://localhost:3001/fhir/MedicationRequest', {
+      const res = await fetch('${API_URL}/fhir/MedicationRequest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

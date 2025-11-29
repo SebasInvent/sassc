@@ -14,6 +14,7 @@ import { AuthorizationDetailDialog } from '@/components/dashboard/authorization-
 import { AlertCircle, FileCheck, Clock, CheckCircle2, XCircle, ArrowLeft, Eye, Calendar, User, AlertTriangle, Search } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
+import { API_URL } from '@/lib/api';
 
 // --- SWR Fetcher ---
 const fetcher = async (url: string, token: string) => {
@@ -69,7 +70,7 @@ export default function AuthorizationsPage() {
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  const apiUrl = 'http://localhost:3001/fhir/Authorization';
+  const apiUrl = '${API_URL}/fhir/Authorization';
   const { data: authorizations, error, isLoading, mutate } = useSWR<Authorization[]>(
     apiUrl, // Temporalmente sin verificar token
     async (url: string) => {

@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { API_URL } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +68,7 @@ export function EditPatientDialog({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/fhir/Patient/${patient.id}`, {
+      const response = await fetch(`${API_URL}/fhir/Patient/${patient.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

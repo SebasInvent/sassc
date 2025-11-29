@@ -23,6 +23,7 @@ import {
   MapPin,
   FileText,
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface Patient {
@@ -115,7 +116,7 @@ export default function NuevaRemisionPage() {
     setSearchingPatient(true);
     try {
       const response = await fetch(
-        `http://localhost:3001/fhir/Patient?search=${encodeURIComponent(searchPatient)}`,
+        `${API_URL}/fhir/Patient?search=${encodeURIComponent(searchPatient)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -137,7 +138,7 @@ export default function NuevaRemisionPage() {
     try {
       // Buscar IPS que tengan la especialidad en sus servicios
       const response = await fetch(
-        `http://localhost:3001/ips`,
+        `${API_URL}/ips`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -176,7 +177,7 @@ export default function NuevaRemisionPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:3001/remisiones', {
+      const response = await fetch('${API_URL}/remisiones', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

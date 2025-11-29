@@ -25,6 +25,7 @@ import {
   detectFaceOnly,
   descriptorToString 
 } from '@/lib/faceRecognition';
+import { API_URL } from '@/lib/api';
 
 type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'procesando' | 'exito' | 'error';
 
@@ -243,7 +244,7 @@ export default function RegistroFacialPage() {
         // Guardar automáticamente en el servidor
         try {
           console.log('📤 Enviando registro al servidor...');
-          const response = await fetch('http://localhost:3001/auth/register-new-user', {
+          const response = await fetch(`${API_URL}/auth/register-new-user`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -288,7 +289,7 @@ export default function RegistroFacialPage() {
 
     try {
       console.log('📤 Enviando registro al servidor...');
-      const response = await fetch('http://localhost:3001/auth/register-new-user', {
+      const response = await fetch(`${API_URL}/auth/register-new-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
