@@ -12,7 +12,10 @@ import {
   RefreshCw,
   UserPlus,
   ArrowLeft,
-  Save
+  Save,
+  CreditCard,
+  Shield,
+  ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +30,10 @@ import {
 } from '@/lib/faceRecognition';
 import { API_URL } from '@/lib/api';
 
-type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'procesando' | 'exito' | 'error';
+type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'capturando_cedula' | 'procesando' | 'exito' | 'error';
+
+// Roles que requieren verificación con cédula (altos mandos)
+const ROLES_REQUIRE_CEDULA = ['SUPER_ADMIN', 'ADMIN', 'DOCTOR'];
 
 export default function RegistroFacialPage() {
   const router = useRouter();
@@ -38,6 +44,8 @@ export default function RegistroFacialPage() {
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [capturedDescriptors, setCapturedDescriptors] = useState<Float32Array[]>([]);
   const [descriptor, setDescriptor] = useState<string | null>(null);
+  const [cedulaImage, setCedulaImage] = useState<string | null>(null);
+  const [cedulaNumber, setCedulaNumber] = useState<string>('');
   
   // Roles disponibles
   const ROLES = [
@@ -226,7 +234,7 @@ export default function RegistroFacialPage() {
       
       console.log(`📸 Captura ${newImages.length}/3 - Descriptor (primeros 5):`, Array.from(desc.slice(0, 5)).map(n => n.toFixed(4)));
       
-      // Si es la tercera captura, PROMEDIAR descriptores y enviar al servidor
+      // Si es la tercera captura, PROMEDIAR descriptores
       if (newImages.length >= 3) {
         // Promediar los 3 descriptores para mayor precisión
         const avgDescriptor = new Float32Array(128);
@@ -238,48 +246,136 @@ export default function RegistroFacialPage() {
         
         const descriptorStr = descriptorToString(avgDescriptor);
         setDescriptor(descriptorStr);
-        setEstado('procesando');
         cleanup();
         
-        // Guardar automáticamente en el servidor
-        try {
-          console.log('📤 Enviando registro al servidor...');
-          const response = await fetch(`${API_URL}/auth/register-new-user`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              specialty: formData.specialty || formData.role || 'General',
-              role: formData.role,
-              faceDescriptor: descriptorStr,
-              faceImage: imageBase64,
-            }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error guardando registro');
-          }
-
-          const data = await response.json();
-          console.log('✅ Registro exitoso:', data);
-          setGeneratedLicense(data.user.license);
-          setEstado('exito');
-          
-          // Redirigir después de mostrar la licencia
-          setTimeout(() => {
-            router.push('/login');
-          }, 4000);
-          
-        } catch (err: any) {
-          console.error('❌ Error:', err);
-          setErrorMsg(err.message || 'Error guardando registro');
-          setEstado('error');
+        // Si es un alto mando, ir a captura de cédula
+        if (ROLES_REQUIRE_CEDULA.includes(formData.role)) {
+          setEstado('capturando_cedula');
+        } else {
+          // Si no requiere cédula, guardar directamente
+          await saveRegistration(descriptorStr, imageBase64, null);
         }
       }
     }
   };
+
+  // Función para guardar el registro en el servidor
+  const saveRegistration = async (faceDescriptor: string, faceImage: string, cedulaImg: string | null) => {
+    setEstado('procesando');
+    
+    try {
+      console.log('📤 Enviando registro al servidor...');
+      const response = await fetch(`${API_URL}/auth/register-new-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          specialty: formData.specialty || formData.role || 'General',
+          role: formData.role,
+          faceDescriptor: faceDescriptor,
+          faceImage: faceImage,
+          cedulaImage: cedulaImg,
+          cedulaNumber: cedulaNumber || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error guardando registro');
+      }
+
+      const data = await response.json();
+      console.log('✅ Registro exitoso:', data);
+      setGeneratedLicense(data.user.license);
+      setEstado('exito');
+      
+      // Redirigir después de mostrar la licencia
+      setTimeout(() => {
+        router.push('/login');
+      }, 4000);
+      
+    } catch (err: any) {
+      console.error('❌ Error:', err);
+      setErrorMsg(err.message || 'Error guardando registro');
+      setEstado('error');
+    }
+  };
+
+  // Función para capturar la cédula
+  const captureCedula = async () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0);
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+    
+    setCedulaImage(imageBase64);
+    cleanup();
+    
+    // Guardar registro con la cédula
+    await saveRegistration(
+      descriptor!, 
+      capturedImages[capturedImages.length - 1], 
+      imageBase64
+    );
+  };
+
+  // Función para saltar la captura de cédula
+  const skipCedula = async () => {
+    cleanup();
+    await saveRegistration(
+      descriptor!, 
+      capturedImages[capturedImages.length - 1], 
+      null
+    );
+  };
+
+  // Función para iniciar cámara para cédula
+  const startCedulaCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'environment' // Cámara trasera para documentos
+        },
+        audio: false
+      });
+      
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (err: any) {
+      // Si falla la cámara trasera, usar la frontal
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    }
+  };
+
+  // Efecto para iniciar cámara cuando se entra a captura de cédula
+  useEffect(() => {
+    if (estado === 'capturando_cedula') {
+      startCedulaCamera();
+    }
+  }, [estado]);
 
   const handleSaveRegistration = async () => {
     if (!descriptor) {
@@ -418,6 +514,20 @@ export default function RegistroFacialPage() {
                 </p>
               </div>
 
+              {/* Aviso de cédula para altos mandos */}
+              {ROLES_REQUIRE_CEDULA.includes(formData.role) && (
+                <div className="bg-amber-500/20 rounded-lg p-3 border border-amber-400/30 flex items-start gap-2">
+                  <Shield className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-200">Verificación adicional requerida</p>
+                    <p className="text-xs text-amber-200/70 mt-1">
+                      Como {formData.role === 'SUPER_ADMIN' ? 'Super Administrador' : formData.role === 'ADMIN' ? 'Administrador' : 'Doctor'}, 
+                      se le pedirá una foto de su cédula para firmas de alto nivel.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {errorMsg && (
                 <Alert variant="destructive" className="bg-red-500/90 border-red-400/50">
                   <AlertCircle className="h-4 w-4" />
@@ -524,11 +634,100 @@ export default function RegistroFacialPage() {
             </div>
           )}
 
+          {/* Estado: Capturando Cédula */}
+          {estado === 'capturando_cedula' && (
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center mb-3">
+                  <CreditCard className="w-6 h-6 text-amber-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Captura de Cédula</h3>
+                <p className="text-sm text-white/70">
+                  Como {formData.role === 'SUPER_ADMIN' ? 'Super Administrador' : formData.role === 'ADMIN' ? 'Administrador' : 'Doctor'}, 
+                  necesitamos una foto de su cédula para firmas de alto nivel.
+                </p>
+              </div>
+
+              {/* Indicador de seguridad */}
+              <div className="bg-amber-500/20 rounded-lg p-3 border border-amber-400/30 flex items-start gap-2">
+                <Shield className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-200">
+                  Su cédula será usada para verificar su identidad en acciones críticas del sistema 
+                  (autorizaciones, prescripciones, firmas).
+                </p>
+              </div>
+
+              {/* Input para número de cédula */}
+              <div className="space-y-2">
+                <Label htmlFor="cedulaNumber" className="text-white">Número de Cédula</Label>
+                <Input
+                  id="cedulaNumber"
+                  value={cedulaNumber}
+                  onChange={(e) => setCedulaNumber(e.target.value)}
+                  placeholder="Ej: 1234567890"
+                  className="bg-white/90"
+                />
+              </div>
+
+              {/* Video para captura */}
+              <div className="relative rounded-xl overflow-hidden bg-gray-900 aspect-video">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Guía para cédula */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-72 h-44 border-4 border-white/50 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-12 h-12 text-white/30" />
+                  </div>
+                </div>
+
+                {/* Indicador */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="px-4 py-3 rounded-lg text-sm font-medium bg-amber-500 text-white flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    <span>Posicione su cédula dentro del recuadro</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="space-y-2">
+                <Button onClick={captureCedula} className="w-full bg-amber-500 hover:bg-amber-600" size="lg">
+                  <Camera className="w-5 h-5 mr-2" />
+                  Capturar Cédula
+                </Button>
+                
+                <Button onClick={skipCedula} variant="ghost" className="w-full text-white/60 hover:text-white">
+                  <ChevronRight className="w-4 h-4 mr-2" />
+                  Omitir por ahora
+                </Button>
+              </div>
+
+              {/* Miniaturas de capturas faciales */}
+              <div className="pt-2 border-t border-white/10">
+                <p className="text-xs text-white/50 mb-2">Capturas faciales completadas:</p>
+                <div className="flex justify-center gap-2">
+                  {capturedImages.map((img, i) => (
+                    <div key={i} className="w-12 h-12 rounded-lg overflow-hidden border-2 border-green-500">
+                      <img src={img} alt={`Captura ${i + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Estado: Procesando */}
           {estado === 'procesando' && (
             <div className="text-center space-y-4 py-8">
               <Loader2 className="w-12 h-12 mx-auto text-blue-400 animate-spin" />
-              <p className="text-white/80">Procesando registro facial...</p>
+              <p className="text-white/80">Procesando registro...</p>
             </div>
           )}
 
@@ -547,13 +746,26 @@ export default function RegistroFacialPage() {
               </div>
 
               {/* Miniaturas finales */}
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-2 flex-wrap">
                 {capturedImages.map((img, i) => (
-                  <div key={i} className="w-20 h-20 rounded-lg overflow-hidden border-2 border-green-500">
+                  <div key={i} className="w-16 h-16 rounded-lg overflow-hidden border-2 border-green-500">
                     <img src={img} alt={`Captura ${i + 1}`} className="w-full h-full object-cover" />
                   </div>
                 ))}
+                {cedulaImage && (
+                  <div className="w-24 h-16 rounded-lg overflow-hidden border-2 border-amber-500">
+                    <img src={cedulaImage} alt="Cédula" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
+
+              {/* Indicador de cédula registrada */}
+              {cedulaImage && (
+                <div className="bg-amber-500/20 rounded-lg p-2 border border-amber-400/30 flex items-center justify-center gap-2">
+                  <Shield className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs text-amber-200">Cédula registrada para firmas de alto nivel</span>
+                </div>
+              )}
 
               {/* Mostrar licencia generada */}
               {generatedLicense && (
