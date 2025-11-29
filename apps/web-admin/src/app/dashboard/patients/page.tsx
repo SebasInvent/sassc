@@ -66,7 +66,7 @@ export default function PatientsPage() {
 
   const apiUrl = searchTerm 
     ? `${API_URL}/fhir/Patient?search=${searchTerm}`
-    : '${API_URL}/fhir/Patient';
+    : `${API_URL}/fhir/Patient`;
   
   const { data: patients, error, isLoading, mutate } = useSWR<Patient[]>(
     token ? apiUrl : null,

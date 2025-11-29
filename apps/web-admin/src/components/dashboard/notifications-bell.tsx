@@ -38,7 +38,7 @@ export function NotificationsBell() {
 
   // Notificaciones del sistema SASSC
   const { data: resumen } = useSWR(
-    token ? '${API_URL}/notificaciones/resumen' : null,
+    token ? `${API_URL}/notificaciones/resumen` : null,
     (url: string) => fetcher(url, token!),
     {
       revalidateOnFocus: false,

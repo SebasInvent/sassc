@@ -65,7 +65,7 @@ export default function LaboratoryPage() {
   const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
 
   const { data: orders, isLoading, mutate } = useSWR<LabOrder[]>(
-    token ? '${API_URL}/fhir/Laboratory/orders' : null,
+    token ? `${API_URL}/fhir/Laboratory/orders` : null,
     (url: string) => fetcher(url, token!)
   );
 

@@ -54,14 +54,14 @@ export default function PharmacyPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active');
 
-  const apiUrl = '${API_URL}/fhir/MedicationRequest';
+  const apiUrl = `${API_URL}/fhir/MedicationRequest`;
   const { data: prescriptions, error, isLoading, mutate } = useSWR<Prescription[]>(
     token ? apiUrl : null,
     (url: string) => fetcher(url, token!)
   );
 
   const { data: dispensations } = useSWR<any[]>(
-    token ? '${API_URL}/fhir/MedicationDispense' : null,
+    token ? `${API_URL}/fhir/MedicationDispense` : null,
     (url: string) => fetcher(url, token!)
   );
 

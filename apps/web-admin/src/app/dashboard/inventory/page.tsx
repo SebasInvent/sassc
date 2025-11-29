@@ -44,7 +44,7 @@ type InventoryItem = {
 export default function InventoryPage() {
   const { token } = useAuth();
 
-  const apiUrl = '${API_URL}/fhir/Inventory';
+  const apiUrl = `${API_URL}/fhir/Inventory`;
   const { data: inventory, error, isLoading, mutate } = useSWR<InventoryItem[]>(
     token ? apiUrl : null,
     (url: string) => fetcher(url, token!)

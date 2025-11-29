@@ -26,7 +26,7 @@ export function CriticalStockWidget() {
   const { token } = useAuth();
 
   const { data: lowStock, isLoading } = useSWR<InventoryItem[]>(
-    token ? '${API_URL}/fhir/Inventory/low-stock' : null,
+    token ? `${API_URL}/fhir/Inventory/low-stock` : null,
     (url: string) => fetcher(url, token!)
   );
 

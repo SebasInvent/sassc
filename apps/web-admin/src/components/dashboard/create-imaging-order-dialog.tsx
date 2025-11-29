@@ -53,7 +53,7 @@ export function CreateImagingOrderDialog({
   const [loading, setLoading] = useState(false);
 
   const { data: patients } = useSWR(
-    token ? '${API_URL}/fhir/Patient' : null,
+    token ? `${API_URL}/fhir/Patient` : null,
     (url: string) => fetcher(url, token!)
   );
 

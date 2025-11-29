@@ -29,7 +29,7 @@ export function CreatePrescriptionDialog({ onSuccess }: CreatePrescriptionDialog
 
   // Cargar pacientes
   const { data: patients } = useSWR(
-    token ? '${API_URL}/fhir/Patient' : null,
+    token ? `${API_URL}/fhir/Patient` : null,
     (url: string) => fetcher(url, token!)
   );
 

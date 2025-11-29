@@ -38,7 +38,7 @@ export default function AppointmentsPage() {
   const [filter, setFilter] = useState<'all' | 'today' | 'upcoming'>('all');
 
   const { data: appointments, isLoading, mutate } = useSWR<Appointment[]>(
-    token ? '${API_URL}/fhir/Appointment' : null,
+    token ? `${API_URL}/fhir/Appointment` : null,
     (url: string) => fetcher(url, token!)
   );
 

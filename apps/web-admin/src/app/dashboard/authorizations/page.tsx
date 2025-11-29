@@ -70,7 +70,7 @@ export default function AuthorizationsPage() {
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  const apiUrl = '${API_URL}/fhir/Authorization';
+  const apiUrl = `${API_URL}/fhir/Authorization`;
   const { data: authorizations, error, isLoading, mutate } = useSWR<Authorization[]>(
     apiUrl, // Temporalmente sin verificar token
     async (url: string) => {

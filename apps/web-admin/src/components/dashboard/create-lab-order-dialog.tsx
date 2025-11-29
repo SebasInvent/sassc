@@ -60,7 +60,7 @@ export function CreateLabOrderDialog({
   const [customTest, setCustomTest] = useState('');
 
   const { data: patients } = useSWR(
-    token ? '${API_URL}/fhir/Patient' : null,
+    token ? `${API_URL}/fhir/Patient` : null,
     (url: string) => fetcher(url, token!)
   );
 

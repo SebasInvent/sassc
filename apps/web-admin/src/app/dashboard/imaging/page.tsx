@@ -68,7 +68,7 @@ export default function ImagingPage() {
   const [selectedOrder, setSelectedOrder] = useState<ImagingOrder | null>(null);
 
   const { data: orders, isLoading, mutate } = useSWR<ImagingOrder[]>(
-    token ? '${API_URL}/fhir/Imaging/orders' : null,
+    token ? `${API_URL}/fhir/Imaging/orders` : null,
     (url: string) => fetcher(url, token!)
   );
 
