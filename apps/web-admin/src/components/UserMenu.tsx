@@ -58,9 +58,9 @@ export function UserMenu() {
   // Mostrar skeleton solo mientras está cargando
   if (loading || !user) {
     return (
-      <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-100 border border-gray-200">
-        <div className="w-10 h-10 rounded-full bg-gray-300 animate-pulse" />
-        <div className="hidden md:block space-y-1">
+      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-gray-100 border border-gray-200">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-300 animate-pulse" />
+        <div className="hidden sm:block space-y-1">
           <div className="h-3 w-20 bg-gray-300 rounded animate-pulse" />
           <div className="h-2 w-16 bg-gray-200 rounded animate-pulse" />
         </div>
@@ -84,26 +84,26 @@ export function UserMenu() {
       {/* User Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-all duration-300 hover:scale-105 group"
+        className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-all duration-300 hover:scale-105 group"
       >
         {/* Avatar with Gradient */}
         <div className="relative">
-          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${config.color} flex items-center justify-center text-white font-bold text-sm shadow-md`}>
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${config.color} flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md`}>
             {initials}
           </div>
-          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br ${config.color} border-2 border-white flex items-center justify-center`}>
-            <RoleIcon className="h-2.5 w-2.5 text-white" />
+          <div className={`absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-br ${config.color} border-2 border-white flex items-center justify-center`}>
+            <RoleIcon className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white" />
           </div>
         </div>
 
-        {/* User Info */}
-        <div className="hidden md:block text-left">
+        {/* User Info - Hidden on mobile */}
+        <div className="hidden lg:block text-left">
           <p className="text-sm font-semibold text-gray-900">{user.name}</p>
           <p className="text-xs text-gray-500">{user.specialty || user.license}</p>
         </div>
 
         {/* Chevron */}
-        <ChevronDown className={`h-4 w-4 text-gray-600 transition-transform duration-300 ${
+        <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-600 transition-transform duration-300 ${
           isOpen ? 'rotate-180' : ''
         }`} />
       </button>

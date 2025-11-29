@@ -70,22 +70,22 @@ export function MedicoCapDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header personalizado */}
-      <div className="bg-gradient-to-r from-cyan-600 to-teal-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-xl">
-            <Building2 className="h-8 w-8" />
+      <div className="bg-gradient-to-r from-cyan-600 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl">
+            <Building2 className="h-6 w-6 sm:h-8 sm:w-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Centro de Atención Primaria</h1>
-            <p className="text-cyan-100">Dr. {user?.name} - {user?.specialty}</p>
+            <h1 className="text-lg sm:text-2xl font-bold">Centro de Atención Primaria</h1>
+            <p className="text-xs sm:text-base text-cyan-100">Dr. {user?.name} - {user?.specialty}</p>
           </div>
         </div>
       </div>
 
       {/* Acciones rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Link href="/dashboard/remisiones/nueva">
           <Card className="border-0 shadow-sm hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 group">
             <CardContent className="p-6 flex items-center gap-4">
@@ -218,22 +218,22 @@ export function DirectorIpsDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header personalizado */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-xl">
-            <Hospital className="h-8 w-8" />
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl">
+            <Hospital className="h-6 w-6 sm:h-8 sm:w-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Institución Prestadora de Servicios</h1>
-            <p className="text-purple-100">Director: {user?.name}</p>
+            <h1 className="text-lg sm:text-2xl font-bold">Institución Prestadora de Servicios</h1>
+            <p className="text-xs sm:text-base text-purple-100">Director: {user?.name}</p>
           </div>
         </div>
       </div>
 
       {/* KPIs de la IPS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -410,27 +410,27 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header Admin */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Activity className="h-8 w-8" />
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl">
+              <Activity className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Panel de Administración</h1>
-              <p className="text-gray-300">Vista global del sistema SASSC</p>
+              <h1 className="text-lg sm:text-2xl font-bold">Panel de Administración</h1>
+              <p className="text-xs sm:text-base text-gray-300">Vista global del sistema SASSC</p>
             </div>
           </div>
-          <Badge className="bg-emerald-500 text-white px-3 py-1">
+          <Badge className="bg-emerald-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm w-fit">
             Sistema Operativo
           </Badge>
         </div>
       </div>
 
       {/* KPIs Globales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -497,7 +497,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Accesos rápidos Admin */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Link href="/dashboard/caps">
           <Card className="border-0 shadow-sm hover:shadow-lg transition-all cursor-pointer group">
             <CardContent className="p-6">

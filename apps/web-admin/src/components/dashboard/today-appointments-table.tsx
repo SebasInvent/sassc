@@ -87,50 +87,78 @@ export function TodayAppointmentsTable() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Citas para Hoy</CardTitle>
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-base sm:text-lg">Citas para Hoy</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Hora</TableHead>
-              <TableHead>Paciente</TableHead>
-              <TableHead>Cédula</TableHead>
-              <TableHead>Modalidad</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {appointments.length > 0 ? (
-              appointments.map((apt) => (
-                <TableRow key={apt.id}>
-                  <TableCell className="font-medium">{formatTime(apt.start)}</TableCell>
-                  <TableCell>{`${apt.patient.firstName} ${apt.patient.lastName}`}</TableCell>
-                  <TableCell>{apt.patient.docNumber}</TableCell>
-                  <TableCell>{apt.modality}</TableCell>
-                  <TableCell>
-                    <Badge variant={apt.encounter ? 'default' : 'secondary'}>
+      <CardContent className="p-0 sm:p-6 sm:pt-0">
+        {/* Vista móvil: Cards */}
+        <div className="block sm:hidden">
+          {appointments.length > 0 ? (
+            <div className="divide-y">
+              {appointments.map((apt) => (
+                <div key={apt.id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm">{formatTime(apt.start)}</span>
+                    <Badge variant={apt.encounter ? 'default' : 'secondary'} className="text-xs">
                       {apt.encounter ? 'En Consulta' : 'Confirmada'}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/encounter/${apt.id}`}>Ver Ficha</Link>
-                    </Button>
+                  </div>
+                  <p className="font-medium">{`${apt.patient.firstName} ${apt.patient.lastName}`}</p>
+                  <p className="text-xs text-gray-500">CC: {apt.patient.docNumber} • {apt.modality}</p>
+                  <Button asChild variant="outline" size="sm" className="w-full mt-2">
+                    <Link href={`/dashboard/encounter/${apt.id}`}>Ver Ficha</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 py-8 px-4">No hay citas programadas para hoy.</p>
+          )}
+        </div>
+
+        {/* Vista desktop: Tabla */}
+        <div className="hidden sm:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Hora</TableHead>
+                <TableHead>Paciente</TableHead>
+                <TableHead>Cédula</TableHead>
+                <TableHead>Modalidad</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {appointments.length > 0 ? (
+                appointments.map((apt) => (
+                  <TableRow key={apt.id}>
+                    <TableCell className="font-medium">{formatTime(apt.start)}</TableCell>
+                    <TableCell>{`${apt.patient.firstName} ${apt.patient.lastName}`}</TableCell>
+                    <TableCell>{apt.patient.docNumber}</TableCell>
+                    <TableCell>{apt.modality}</TableCell>
+                    <TableCell>
+                      <Badge variant={apt.encounter ? 'default' : 'secondary'}>
+                        {apt.encounter ? 'En Consulta' : 'Confirmada'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/encounter/${apt.id}`}>Ver Ficha</Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    No hay citas programadas para hoy.
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center">
-                  No hay citas programadas para hoy.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
