@@ -10,12 +10,14 @@ const nextConfig: NextConfig = {
   
   // Optimizaciones para producción
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
     unoptimized: true,
   },
-  
-  // Output standalone para Docker/Railway
-  output: 'standalone',
 };
 
 export default nextConfig;
