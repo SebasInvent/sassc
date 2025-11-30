@@ -243,14 +243,28 @@ function analyzeResults(
   }
   
   // Anti-spoofing combinado
+  // Si AWS confirma identidad con alta confianza, confiar más en el liveness
+  const awsConfirmsIdentity = aws.success && aws.matched && aws.confidence >= 90;
+  const googleLiveness = google.success ? google.antiSpoofing.livenessScore : 0;
+  
+  // Considerar rostro real si:
+  // 1. Google dice que es real (liveness > 70), O
+  // 2. AWS confirma identidad con >90% Y Google detectó un rostro (liveness > 50)
+  const isRealFace = 
+    (google.success && google.antiSpoofing.isRealFace) ||
+    (awsConfirmsIdentity && googleLiveness >= 50);
+  
   const antiSpoofing = {
-    isRealFace: google.success ? google.antiSpoofing.isRealFace : local.success,
-    livenessScore: google.success ? google.antiSpoofing.livenessScore : (local.success ? 75 : 30),
+    isRealFace,
+    livenessScore: googleLiveness,
   };
   
   // Determinar éxito final
+  // Si AWS confirma con alta confianza, solo necesitamos 1 proveedor
+  const minProviders = awsConfirmsIdentity ? 1 : CASCADE_CONFIG.MIN_PROVIDERS_PASS;
+  
   const success = 
-    providersPass >= CASCADE_CONFIG.MIN_PROVIDERS_PASS &&
+    providersPass >= minProviders &&
     combinedScore >= CASCADE_CONFIG.MIN_COMBINED_SCORE &&
     antiSpoofing.isRealFace &&
     matchedUser !== null;
