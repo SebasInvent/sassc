@@ -11,8 +11,7 @@
  * Todos se ejecutan en PARALELO para cumplir el tiempo límite
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 
 // Tipos
 export interface CascadeVerificationResult {
@@ -83,7 +82,12 @@ export class CascadeVerificationService {
   private googleVisionClient: any = null;
   private awsRekognitionClient: any = null;
   
-  constructor(private readonly configService: ConfigService) {}
+  constructor() {}
+  
+  // Helper para obtener variables de entorno
+  private getEnv(key: string): string | undefined {
+    return process.env[key];
+  }
 
   /**
    * Verifica un rostro usando múltiples proveedores en paralelo
@@ -178,7 +182,7 @@ export class CascadeVerificationService {
     
     try {
       // Verificar si tenemos credenciales
-      const credentials = this.configService.get('GOOGLE_CLOUD_CREDENTIALS');
+      const credentials = this.getEnv('GOOGLE_CLOUD_CREDENTIALS');
       if (!credentials) {
         return {
           success: false,
@@ -281,8 +285,8 @@ export class CascadeVerificationService {
     
     try {
       // Verificar credenciales
-      const accessKey = this.configService.get('AWS_ACCESS_KEY_ID');
-      const secretKey = this.configService.get('AWS_SECRET_ACCESS_KEY');
+      const accessKey = this.getEnv('AWS_ACCESS_KEY_ID');
+      const secretKey = this.getEnv('AWS_SECRET_ACCESS_KEY');
       
       if (!accessKey || !secretKey) {
         return {
@@ -331,7 +335,7 @@ export class CascadeVerificationService {
       try {
         const { RekognitionClient, CompareFacesCommand } = await import('@aws-sdk/client-rekognition');
         this.awsRekognitionClient = new RekognitionClient({
-          region: this.configService.get('AWS_REGION') || 'us-east-1',
+          region: this.getEnv('AWS_REGION') || 'us-east-1',
         });
       } catch (e) {
         return { success: false, confidence: 0, matchedUserId: null, timeMs: 0, error: 'AWS SDK not installed' };
