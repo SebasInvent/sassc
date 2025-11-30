@@ -119,7 +119,8 @@ export async function verifyCascade(
   if (backendResult.userId) {
     matchedUser = registeredUsers.find(u => u.id === backendResult.userId) || null;
   } else if (localResult.user) {
-    matchedUser = localResult.user;
+    // Buscar el usuario completo en registeredUsers
+    matchedUser = registeredUsers.find(u => u.id === localResult.user!.id) || null;
   }
   
   // Verificar anti-spoofing
