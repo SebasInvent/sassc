@@ -2,6 +2,7 @@ import { Controller, Post, Body, HttpCode, HttpStatus, Get, Param, NotFoundExcep
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { RekognitionClient, CompareFacesCommand } from '@aws-sdk/client-rekognition';
 
 @Controller('auth')
 export class AuthController {
@@ -227,5 +228,189 @@ export class AuthController {
       message: `Se eliminaron los datos faciales de ${result.count} usuarios`,
       cleared: result.count,
     };
+  }
+
+  /**
+   * Comparar rostros usando AWS Rekognition
+   * Endpoint para verificación de identidad precisa
+   */
+  @Post('compare-faces')
+  async compareFaces(
+    @Body() body: { sourceImage: string; targetImage: string }
+  ) {
+    const { sourceImage, targetImage } = body;
+
+    if (!sourceImage || !targetImage) {
+      return {
+        success: false,
+        matched: false,
+        similarity: 0,
+        error: 'Se requieren sourceImage y targetImage',
+      };
+    }
+
+    try {
+      const client = new RekognitionClient({
+        region: process.env.AWS_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+        },
+      });
+
+      // Limpiar base64 (quitar prefijo data:image/...)
+      const cleanSource = sourceImage.replace(/^data:image\/\w+;base64,/, '');
+      const cleanTarget = targetImage.replace(/^data:image\/\w+;base64,/, '');
+
+      const command = new CompareFacesCommand({
+        SourceImage: { Bytes: Buffer.from(cleanSource, 'base64') },
+        TargetImage: { Bytes: Buffer.from(cleanTarget, 'base64') },
+        SimilarityThreshold: 70,
+      });
+
+      const response = await client.send(command);
+
+      if (response.FaceMatches && response.FaceMatches.length > 0) {
+        const similarity = response.FaceMatches[0].Similarity || 0;
+        return {
+          success: true,
+          matched: similarity >= 80,
+          similarity,
+          confidence: similarity,
+        };
+      }
+
+      return {
+        success: true,
+        matched: false,
+        similarity: 0,
+        confidence: 0,
+        message: 'No se encontró coincidencia',
+      };
+
+    } catch (error: any) {
+      console.error('AWS Rekognition error:', error.message);
+      return {
+        success: false,
+        matched: false,
+        similarity: 0,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Comparar rostro contra todos los usuarios registrados
+   * Retorna el usuario con mayor similitud
+   */
+  @Post('verify-face')
+  async verifyFace(
+    @Body() body: { faceImage: string }
+  ) {
+    const { faceImage } = body;
+
+    if (!faceImage) {
+      return {
+        success: false,
+        matched: false,
+        user: null,
+        error: 'Se requiere faceImage',
+      };
+    }
+
+    // Obtener usuarios con imagen facial
+    const users = await this.prisma.practitioner.findMany({
+      where: { faceImage: { not: null } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        license: true,
+        specialty: true,
+        faceImage: true,
+      },
+    });
+
+    if (users.length === 0) {
+      return {
+        success: false,
+        matched: false,
+        user: null,
+        error: 'No hay usuarios con rostro registrado',
+      };
+    }
+
+    try {
+      const client = new RekognitionClient({
+        region: process.env.AWS_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+        },
+      });
+
+      const cleanSource = faceImage.replace(/^data:image\/\w+;base64,/, '');
+      let bestMatch: { user: any; similarity: number } | null = null;
+
+      // Comparar con cada usuario
+      for (const user of users) {
+        try {
+          const cleanTarget = user.faceImage!.replace(/^data:image\/\w+;base64,/, '');
+
+          const command = new CompareFacesCommand({
+            SourceImage: { Bytes: Buffer.from(cleanSource, 'base64') },
+            TargetImage: { Bytes: Buffer.from(cleanTarget, 'base64') },
+            SimilarityThreshold: 70,
+          });
+
+          const response = await client.send(command);
+
+          if (response.FaceMatches && response.FaceMatches.length > 0) {
+            const similarity = response.FaceMatches[0].Similarity || 0;
+            if (!bestMatch || similarity > bestMatch.similarity) {
+              bestMatch = {
+                user: {
+                  id: user.id,
+                  name: `${user.firstName} ${user.lastName}`,
+                  license: user.license,
+                  specialty: user.specialty,
+                },
+                similarity,
+              };
+            }
+          }
+        } catch (e) {
+          // Continuar con el siguiente usuario si hay error
+          console.warn(`Error comparing with user ${user.id}:`, e);
+        }
+      }
+
+      if (bestMatch && bestMatch.similarity >= 80) {
+        return {
+          success: true,
+          matched: true,
+          user: bestMatch.user,
+          similarity: bestMatch.similarity,
+          confidence: bestMatch.similarity,
+        };
+      }
+
+      return {
+        success: true,
+        matched: false,
+        user: null,
+        similarity: bestMatch?.similarity || 0,
+        message: 'No se encontró coincidencia suficiente',
+      };
+
+    } catch (error: any) {
+      console.error('AWS Rekognition error:', error.message);
+      return {
+        success: false,
+        matched: false,
+        user: null,
+        error: error.message,
+      };
+    }
   }
 }

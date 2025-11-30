@@ -20,6 +20,7 @@
     "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.940.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^10.2.0",
