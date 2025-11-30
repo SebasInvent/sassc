@@ -1,15 +1,17 @@
 /**
- * Cliente de Verificación en Cascada
+ * Cliente de Verificación en Cascada - ARQUITECTURA PROFESIONAL
  * 
- * Orquesta la verificación facial usando múltiples proveedores:
- * 1. Google Cloud Vision (anti-spoofing)
- * 2. AWS Rekognition (comparación facial)
+ * Orquesta la verificación facial usando múltiples proveedores DIRECTAMENTE:
+ * 1. Google Cloud Vision (anti-spoofing + detección) - API REST
+ * 2. AWS Rekognition (comparación facial) - API REST con Signature V4
  * 3. Face-api.js local (verificación rápida)
  * 
  * Todo en paralelo, máximo 1.5 segundos
+ * Sin SDKs pesados - llamadas REST directas
  */
 
-import { API_URL } from './api';
+import { detectFaceWithVision, type VisionFaceResult } from './cloudVision';
+import { compareFacesWithRekognition, type RekognitionCompareResult } from './awsRekognition';
 import { 
   verifyFaceWithMultipleCaptures, 
   quickVerify,
@@ -22,15 +24,21 @@ const CASCADE_CONFIG = {
   // Tiempo máximo total (ms)
   MAX_TOTAL_TIME: 1500,
   
-  // Si el backend no responde, usar solo local
-  BACKEND_TIMEOUT: 1200,
+  // Timeouts individuales
+  GOOGLE_TIMEOUT: 600,
+  AWS_TIMEOUT: 700,
+  LOCAL_TIMEOUT: 800,
   
   // Peso de cada verificación
-  BACKEND_WEIGHT: 0.6,
-  LOCAL_WEIGHT: 0.4,
+  GOOGLE_WEIGHT: 0.25,  // Anti-spoofing
+  AWS_WEIGHT: 0.45,     // Comparación precisa
+  LOCAL_WEIGHT: 0.30,   // Verificación rápida
   
   // Mínimo para aprobar
-  MIN_COMBINED_SCORE: 75,
+  MIN_COMBINED_SCORE: 70,
+  
+  // Mínimo de proveedores que deben aprobar
+  MIN_PROVIDERS_PASS: 2,
 };
 
 export interface CascadeResult {
@@ -39,15 +47,25 @@ export interface CascadeResult {
   confidence: number;
   verificationTimeMs: number;
   providers: {
-    backend: {
+    googleVision: {
       success: boolean;
       confidence: number;
-      providers?: {
-        googleVision: { success: boolean; confidence: number };
-        awsRekognition: { success: boolean; confidence: number };
-      };
+      antiSpoofing: { isRealFace: boolean; livenessScore: number };
+      timeMs: number;
+    };
+    awsRekognition: {
+      success: boolean;
+      confidence: number;
+      matchedUserId: string | null;
+      timeMs: number;
     };
     local: {
+      success: boolean;
+      confidence: number;
+      timeMs: number;
+    };
+    // Alias para compatibilidad
+    backend: {
       success: boolean;
       confidence: number;
     };
@@ -60,7 +78,9 @@ export interface CascadeResult {
 }
 
 /**
- * Verifica un rostro usando verificación en cascada (backend + local)
+ * Verifica un rostro usando verificación en cascada
+ * Google Vision + AWS Rekognition + Face-api.js local
+ * Todo en PARALELO para máxima velocidad
  */
 export async function verifyCascade(
   videoElement: HTMLVideoElement,
@@ -82,55 +102,155 @@ export async function verifyCascade(
   }
   
   ctx.drawImage(videoElement, 0, 0);
-  const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+  const imageBase64 = canvas.toDataURL('image/jpeg', 0.85);
   
-  onProgress?.('Enviando a verificación en cascada...', 20);
+  onProgress?.('Verificando con Google Vision...', 15);
   
-  // Ejecutar verificación local y backend en PARALELO
-  const [backendResult, localResult] = await Promise.all([
-    verifyWithBackend(imageBase64, registeredUsers, onProgress),
-    verifyLocal(videoElement, registeredUsers, onProgress),
+  // Preparar usuarios con imágenes para AWS
+  const usersForAWS = registeredUsers.map(u => ({
+    id: u.id,
+    name: u.name,
+    faceImage: u.faceImage,
+  }));
+  
+  // Ejecutar TODOS los proveedores en PARALELO
+  const [googleResult, awsResult, localResult] = await Promise.all([
+    // 1. Google Cloud Vision - Anti-spoofing
+    detectFaceWithVision(imageBase64, CASCADE_CONFIG.GOOGLE_TIMEOUT)
+      .then(r => {
+        onProgress?.('Google Vision completado', 35);
+        return r;
+      }),
+    
+    // 2. AWS Rekognition - Comparación facial
+    compareFacesWithRekognition(imageBase64, usersForAWS, CASCADE_CONFIG.AWS_TIMEOUT)
+      .then(r => {
+        onProgress?.('AWS Rekognition completado', 55);
+        return r;
+      }),
+    
+    // 3. Face-api.js local - Verificación rápida
+    verifyFaceWithMultipleCaptures(videoElement, registeredUsers, (msg, prog) => {
+      onProgress?.(msg, 55 + prog * 0.35);
+    }),
   ]);
   
   const totalTime = Date.now() - startTime;
   
-  onProgress?.('Analizando resultados...', 90);
+  onProgress?.('Analizando resultados...', 95);
   
-  // Calcular score combinado
+  // Analizar resultados
+  const analysis = analyzeResults(googleResult, awsResult, localResult, registeredUsers);
+  
+  onProgress?.('¡Verificación completada!', 100);
+  
+  // Logging detallado
+  console.log(`🔐 Verificación en cascada completada en ${totalTime}ms`);
+  console.log(`   Google Vision: ${googleResult.success ? '✅' : '❌'} (${googleResult.confidence.toFixed(0)}%) - Liveness: ${googleResult.antiSpoofing.livenessScore}%`);
+  console.log(`   AWS Rekognition: ${awsResult.success ? '✅' : '❌'} (${awsResult.confidence.toFixed(0)}%) - Match: ${awsResult.matchedUserId || 'ninguno'}`);
+  console.log(`   Local Face-API: ${localResult.success ? '✅' : '❌'} (${localResult.confidence.toFixed(0)}%)`);
+  console.log(`   Combinado: ${analysis.combinedScore.toFixed(1)}% - Proveedores OK: ${analysis.providersPass}/3`);
+  
+  return {
+    success: analysis.success,
+    user: analysis.matchedUser,
+    confidence: analysis.combinedScore,
+    verificationTimeMs: totalTime,
+    providers: {
+      googleVision: {
+        success: googleResult.success && googleResult.faceDetected,
+        confidence: googleResult.confidence,
+        antiSpoofing: googleResult.antiSpoofing,
+        timeMs: googleResult.timeMs,
+      },
+      awsRekognition: {
+        success: awsResult.success && awsResult.matched,
+        confidence: awsResult.confidence,
+        matchedUserId: awsResult.matchedUserId,
+        timeMs: awsResult.timeMs,
+      },
+      local: {
+        success: localResult.success,
+        confidence: localResult.confidence,
+        timeMs: 0, // No tenemos este dato
+      },
+      // Alias para compatibilidad con UI existente
+      backend: {
+        success: googleResult.success || awsResult.success,
+        confidence: Math.max(googleResult.confidence, awsResult.confidence),
+      },
+    },
+    antiSpoofing: analysis.antiSpoofing,
+    reason: analysis.reason,
+  };
+}
+
+/**
+ * Analiza los resultados de todos los proveedores
+ */
+function analyzeResults(
+  google: VisionFaceResult,
+  aws: RekognitionCompareResult,
+  local: VerificationResult,
+  users: RegisteredUser[]
+): {
+  success: boolean;
+  combinedScore: number;
+  matchedUser: RegisteredUser | null;
+  antiSpoofing: { isRealFace: boolean; livenessScore: number };
+  providersPass: number;
+  reason: string;
+} {
+  // Contar proveedores que aprueban
+  let providersPass = 0;
   let combinedScore = 0;
   let totalWeight = 0;
   
-  if (backendResult.success || backendResult.confidence > 0) {
-    combinedScore += backendResult.confidence * CASCADE_CONFIG.BACKEND_WEIGHT;
-    totalWeight += CASCADE_CONFIG.BACKEND_WEIGHT;
+  // Google Vision (anti-spoofing)
+  if (google.success && google.faceDetected && google.antiSpoofing.isRealFace) {
+    providersPass++;
+    combinedScore += google.confidence * CASCADE_CONFIG.GOOGLE_WEIGHT;
+    totalWeight += CASCADE_CONFIG.GOOGLE_WEIGHT;
   }
   
-  if (localResult.success || localResult.confidence > 0) {
-    combinedScore += localResult.confidence * CASCADE_CONFIG.LOCAL_WEIGHT;
+  // AWS Rekognition (comparación)
+  if (aws.success && aws.matched && aws.confidence >= 80) {
+    providersPass++;
+    combinedScore += aws.confidence * CASCADE_CONFIG.AWS_WEIGHT;
+    totalWeight += CASCADE_CONFIG.AWS_WEIGHT;
+  }
+  
+  // Local Face-API
+  if (local.success && local.confidence >= 70) {
+    providersPass++;
+    combinedScore += local.confidence * CASCADE_CONFIG.LOCAL_WEIGHT;
     totalWeight += CASCADE_CONFIG.LOCAL_WEIGHT;
   }
   
+  // Normalizar score
   if (totalWeight > 0) {
     combinedScore = combinedScore / totalWeight;
   }
   
-  // Determinar usuario (priorizar backend, luego local)
+  // Determinar usuario (consenso entre proveedores)
   let matchedUser: RegisteredUser | null = null;
-  if (backendResult.userId) {
-    matchedUser = registeredUsers.find(u => u.id === backendResult.userId) || null;
-  } else if (localResult.user) {
-    // Buscar el usuario completo en registeredUsers
-    matchedUser = registeredUsers.find(u => u.id === localResult.user!.id) || null;
+  
+  // Prioridad: AWS > Local > ninguno
+  if (aws.matched && aws.matchedUserId) {
+    matchedUser = users.find(u => u.id === aws.matchedUserId) || null;
+  } else if (local.success && local.user) {
+    matchedUser = users.find(u => u.id === local.user!.id) || null;
   }
   
-  // Verificar anti-spoofing
+  // Anti-spoofing combinado
   const antiSpoofing = {
-    isRealFace: backendResult.antiSpoofing?.isRealFace ?? localResult.success,
-    livenessScore: backendResult.antiSpoofing?.livenessScore ?? (localResult.success ? 80 : 30),
+    isRealFace: google.success ? google.antiSpoofing.isRealFace : local.success,
+    livenessScore: google.success ? google.antiSpoofing.livenessScore : (local.success ? 75 : 30),
   };
   
-  // Determinar éxito
+  // Determinar éxito final
   const success = 
+    providersPass >= CASCADE_CONFIG.MIN_PROVIDERS_PASS &&
     combinedScore >= CASCADE_CONFIG.MIN_COMBINED_SCORE &&
     antiSpoofing.isRealFace &&
     matchedUser !== null;
@@ -138,118 +258,25 @@ export async function verifyCascade(
   // Generar razón
   let reason = '';
   if (success) {
-    reason = `Identidad verificada (${combinedScore.toFixed(0)}% confianza)`;
+    reason = `Identidad verificada con ${providersPass}/3 proveedores (${combinedScore.toFixed(0)}% confianza)`;
   } else if (!antiSpoofing.isRealFace) {
     reason = 'No se detectó un rostro real. Posible intento de suplantación.';
   } else if (!matchedUser) {
     reason = 'No se encontró coincidencia en el sistema. ¿Está registrado?';
+  } else if (providersPass < CASCADE_CONFIG.MIN_PROVIDERS_PASS) {
+    reason = `Solo ${providersPass}/3 proveedores aprobaron. Se requieren al menos ${CASCADE_CONFIG.MIN_PROVIDERS_PASS}.`;
   } else {
     reason = `Confianza insuficiente (${combinedScore.toFixed(0)}%). Intente con mejor iluminación.`;
   }
   
-  onProgress?.('¡Verificación completada!', 100);
-  
-  console.log(`🔐 Verificación en cascada completada en ${totalTime}ms`);
-  console.log(`   Backend: ${backendResult.success ? '✅' : '❌'} ${backendResult.confidence}%`);
-  console.log(`   Local: ${localResult.success ? '✅' : '❌'} ${localResult.confidence}%`);
-  console.log(`   Combinado: ${combinedScore.toFixed(1)}%`);
-  
   return {
     success,
-    user: matchedUser,
-    confidence: combinedScore,
-    verificationTimeMs: totalTime,
-    providers: {
-      backend: {
-        success: backendResult.success,
-        confidence: backendResult.confidence,
-        providers: backendResult.providers,
-      },
-      local: {
-        success: localResult.success,
-        confidence: localResult.confidence,
-      },
-    },
+    combinedScore,
+    matchedUser,
     antiSpoofing,
+    providersPass,
     reason,
   };
-}
-
-/**
- * Verificación con el backend (Google Vision + AWS Rekognition)
- */
-async function verifyWithBackend(
-  imageBase64: string,
-  users: RegisteredUser[],
-  onProgress?: (message: string, progress: number) => void
-): Promise<{
-  success: boolean;
-  confidence: number;
-  userId: string | null;
-  providers?: any;
-  antiSpoofing?: { isRealFace: boolean; livenessScore: number };
-}> {
-  try {
-    onProgress?.('Verificando con Google Vision + AWS...', 40);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), CASCADE_CONFIG.BACKEND_TIMEOUT);
-    
-    const response = await fetch(`${API_URL}/biometric/verify-cascade`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: imageBase64,
-        userIds: users.map(u => u.id),
-      }),
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error('Backend verification failed');
-    }
-    
-    const result = await response.json();
-    
-    return {
-      success: result.success,
-      confidence: result.confidence || 0,
-      userId: result.userId,
-      providers: result.providers,
-      antiSpoofing: result.antiSpoofing,
-    };
-    
-  } catch (error: any) {
-    console.warn('Backend verification error:', error.message);
-    
-    // Si el backend falla, retornar resultado vacío (se usará solo local)
-    return {
-      success: false,
-      confidence: 0,
-      userId: null,
-    };
-  }
-}
-
-/**
- * Verificación local con face-api.js
- */
-async function verifyLocal(
-  videoElement: HTMLVideoElement,
-  users: RegisteredUser[],
-  onProgress?: (message: string, progress: number) => void
-): Promise<VerificationResult> {
-  onProgress?.('Verificando localmente...', 60);
-  
-  return verifyFaceWithMultipleCaptures(
-    videoElement,
-    users,
-    (msg, prog) => onProgress?.(msg, 60 + prog * 0.3)
-  );
 }
 
 /**
@@ -262,8 +289,10 @@ function createFailResult(reason: string, timeMs: number): CascadeResult {
     confidence: 0,
     verificationTimeMs: timeMs,
     providers: {
+      googleVision: { success: false, confidence: 0, antiSpoofing: { isRealFace: false, livenessScore: 0 }, timeMs: 0 },
+      awsRekognition: { success: false, confidence: 0, matchedUserId: null, timeMs: 0 },
+      local: { success: false, confidence: 0, timeMs: 0 },
       backend: { success: false, confidence: 0 },
-      local: { success: false, confidence: 0 },
     },
     antiSpoofing: { isRealFace: false, livenessScore: 0 },
     reason,
@@ -297,3 +326,5 @@ async function captureDescriptor(videoElement: HTMLVideoElement): Promise<Float3
   const descriptor = await detectFace(videoElement);
   return descriptor || new Float32Array(128);
 }
+
+export type { RegisteredUser };
