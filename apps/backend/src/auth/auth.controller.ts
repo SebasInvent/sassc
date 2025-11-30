@@ -205,4 +205,25 @@ export class AuthController {
       },
     };
   }
+
+  /**
+   * Limpiar todos los datos faciales (solo desarrollo)
+   */
+  @Post('clear-all-faces')
+  async clearAllFaces() {
+    const result = await this.prisma.practitioner.updateMany({
+      where: { faceDescriptor: { not: null } },
+      data: {
+        faceDescriptor: null,
+        faceImage: null,
+        faceRegisteredAt: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Se eliminaron los datos faciales de ${result.count} usuarios`,
+      cleared: result.count,
+    };
+  }
 }
