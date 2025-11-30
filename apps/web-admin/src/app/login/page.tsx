@@ -21,6 +21,12 @@ import {
   euclideanDistance,
   stringToDescriptor 
 } from '@/lib/faceRecognition';
+import { 
+  verifyFaceWithMultipleCaptures, 
+  quickVerify,
+  SECURITY_CONFIG,
+  type VerificationResult 
+} from '@/lib/faceVerification';
 import { API_URL } from '@/lib/api';
 
 interface RegisteredUser {
@@ -31,7 +37,7 @@ interface RegisteredUser {
   descriptor: string;
 }
 
-type Step = 'loading' | 'camera' | 'recognized' | 'not_registered' | 'no_face_detected' | 'manual_login';
+type Step = 'loading' | 'camera' | 'verifying' | 'recognized' | 'not_registered' | 'no_face_detected' | 'verification_failed' | 'manual_login';
 
 export default function LoginV2Page() {
   const router = useRouter();
@@ -44,6 +50,8 @@ export default function LoginV2Page() {
   const [license, setLicense] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verificationProgress, setVerificationProgress] = useState(0);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -174,20 +182,12 @@ export default function LoginV2Page() {
     if (!videoRef.current || isProcessingRef.current) return;
     
     isProcessingRef.current = true;
-    setStatus('Analizando rostro...');
+    setStep('verifying');
+    setVerificationProgress(0);
+    setStatus('Iniciando verificación segura...');
     
     try {
-      const descriptor = await detectFace(videoRef.current);
-      
-      // CASO 1: No se detectó ningún rostro en la imagen
-      if (!descriptor) {
-        stopCamera();
-        setStep('no_face_detected');
-        isProcessingRef.current = false;
-        return;
-      }
-      
-      // CASO 2: No hay usuarios registrados en el sistema
+      // CASO 1: No hay usuarios registrados en el sistema
       if (registeredUsers.length === 0) {
         stopCamera();
         setStep('not_registered');
@@ -195,40 +195,46 @@ export default function LoginV2Page() {
         return;
       }
       
-      // Comparar con todos los usuarios registrados
-      const comparisons: Array<{user: RegisteredUser, distance: number}> = [];
-      
-      for (const user of registeredUsers) {
-        try {
-          const storedDesc = stringToDescriptor(user.descriptor);
-          const distance = euclideanDistance(descriptor, storedDesc);
-          comparisons.push({ user, distance });
-          console.log(`   ${user.name}: ${distance.toFixed(4)}`);
-        } catch (e) {
-          console.error(`Error con ${user.name}:`, e);
+      // Usar el nuevo sistema de verificación mejorado
+      const result = await verifyFaceWithMultipleCaptures(
+        videoRef.current,
+        registeredUsers,
+        (message, progress) => {
+          setStatus(message);
+          setVerificationProgress(progress);
         }
-      }
+      );
       
-      comparisons.sort((a, b) => a.distance - b.distance);
-      const best = comparisons[0];
+      setVerificationResult(result);
       
-      console.log(`🏆 Mejor match: ${best.user.name} (distancia: ${best.distance.toFixed(4)})`);
-      
-      // CASO 3: Rostro reconocido - distancia menor a 0.6 significa match
-      if (best.distance <= 0.6) {
+      if (result.success && result.user) {
+        // ✅ VERIFICACIÓN EXITOSA
         stopCamera();
-        setRecognizedUser(best.user);
-        setStep('recognized');
-        setTimeout(() => doLogin(best.user.license), 2000);
-      } else {
-        // CASO 4: Rostro detectado pero NO coincide con ningún usuario registrado
-        // Esto significa que la persona NO está registrada en el sistema
+        const matchedUser = registeredUsers.find(u => u.id === result.user!.id);
+        if (matchedUser) {
+          setRecognizedUser(matchedUser);
+          setStep('recognized');
+          console.log(`🔐 Login seguro: ${matchedUser.name} (${result.confidence}% confianza)`);
+          setTimeout(() => doLogin(matchedUser.license), 2000);
+        }
+      } else if (result.details.capturesAnalyzed === 0) {
+        // No se detectó ningún rostro
+        stopCamera();
+        setStep('no_face_detected');
+      } else if (result.distance > SECURITY_CONFIG.MAX_DISTANCE_THRESHOLD) {
+        // Rostro detectado pero no coincide - no registrado
         stopCamera();
         setStep('not_registered');
+      } else {
+        // Verificación fallida por otros motivos (ambigüedad, baja confianza, etc.)
+        stopCamera();
+        setStep('verification_failed');
       }
       
     } catch (err: any) {
+      console.error('Error en verificación:', err);
       setStatus(`Error: ${err.message}`);
+      setStep('verification_failed');
     }
     
     isProcessingRef.current = false;
@@ -316,7 +322,7 @@ export default function LoginV2Page() {
               
               <Button onClick={captureManually} className="w-full mb-3" size="lg">
                 <Camera className="w-5 h-5 mr-2" />
-                Verificar Ahora
+                Verificar Identidad
               </Button>
               
               <div className="grid grid-cols-2 gap-2">
@@ -332,17 +338,60 @@ export default function LoginV2Page() {
             </div>
           )}
 
+          {/* Verifying - Proceso de verificación segura */}
+          {step === 'verifying' && (
+            <div className="p-8 text-center">
+              <div className="relative mb-6">
+                <video 
+                  ref={videoRef} 
+                  className="w-32 h-32 mx-auto rounded-full object-cover border-4 border-blue-500"
+                  style={{ transform: 'scaleX(-1)' }}
+                  autoPlay 
+                  playsInline 
+                  muted 
+                />
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full">
+                    Verificando...
+                  </div>
+                </div>
+              </div>
+              
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Verificación Segura</h2>
+              <p className="text-gray-500 text-sm mb-4">{status}</p>
+              
+              {/* Barra de progreso */}
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${verificationProgress}%` }}
+                />
+              </div>
+              
+              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+                🔐 Realizando {SECURITY_CONFIG.CAPTURES_FOR_VERIFICATION} capturas para máxima seguridad
+              </div>
+            </div>
+          )}
+
           {/* Recognized */}
           {step === 'recognized' && recognizedUser && (
             <div className="p-8 text-center">
               <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <CheckCircle className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Identidad Verificada!</h2>
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
                 <p className="text-xl font-semibold text-blue-600">{recognizedUser.name}</p>
                 <p className="text-sm text-gray-500">{recognizedUser.specialty}</p>
                 <p className="text-xs text-gray-400 mt-1">{recognizedUser.license}</p>
+                {verificationResult && (
+                  <div className="mt-2 pt-2 border-t border-gray-200">
+                    <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      🔐 {verificationResult.confidence}% confianza
+                    </span>
+                  </div>
+                )}
               </div>
               {loading ? (
                 <div className="flex items-center justify-center gap-2 text-green-600">
@@ -389,6 +438,42 @@ export default function LoginV2Page() {
                   Intentar de Nuevo
                 </Button>
                 <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full text-gray-500">
+                  Ingresar con Licencia
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Verification Failed - Verificación fallida por seguridad */}
+          {step === 'verification_failed' && (
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <XCircle className="w-10 h-10 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Verificación Fallida</h2>
+              <p className="text-gray-500 mb-4">
+                {verificationResult?.reason || 'No se pudo verificar tu identidad de forma segura.'}
+              </p>
+              
+              {verificationResult && (
+                <div className="bg-gray-50 rounded-lg p-3 mb-4 text-xs text-left">
+                  <p className="font-medium text-gray-700 mb-1">Detalles de seguridad:</p>
+                  <ul className="text-gray-500 space-y-1">
+                    <li>• Capturas analizadas: {verificationResult.details.capturesAnalyzed}</li>
+                    <li>• Confianza: {verificationResult.confidence}%</li>
+                    {verificationResult.details.variance > 0 && (
+                      <li>• Estabilidad: {verificationResult.details.variance < 0.1 ? 'Buena' : 'Mejorable'}</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Button onClick={retry} className="w-full">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Intentar de Nuevo
+                </Button>
+                <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full">
                   Ingresar con Licencia
                 </Button>
               </div>
