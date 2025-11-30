@@ -36,6 +36,7 @@ interface RegisteredUser {
   license: string;
   specialty: string;
   descriptor: string;
+  faceImage?: string;
 }
 
 type Step = 'loading' | 'camera' | 'verifying' | 'recognized' | 'not_registered' | 'no_face_detected' | 'verification_failed' | 'manual_login';

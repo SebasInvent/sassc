@@ -52,6 +52,7 @@ export class AuthController {
         lastName: true,
         specialty: true,
         faceDescriptor: true,
+        faceImage: true,
       },
     });
 
@@ -63,6 +64,7 @@ export class AuthController {
         license: p.license,
         specialty: p.specialty,
         descriptor: p.faceDescriptor,
+        faceImage: p.faceImage,
       })),
     };
   }
