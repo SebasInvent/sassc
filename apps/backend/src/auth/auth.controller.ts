@@ -1,7 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Get, Param, NotFoundException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { PatientLoginDto } from './dto/patient-login.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('auth')
@@ -17,10 +16,6 @@ export class AuthController {
     return this.authService.login(loginDto.license);
   }
 
-  @Post('patient/login')
-  loginPatient(@Body() patientLoginDto: PatientLoginDto) {
-    return this.authService.loginPatient(patientLoginDto);
-  }
 
   @Get('test-licenses')
   async getTestLicenses() {
