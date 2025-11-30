@@ -27,6 +27,7 @@ import {
   SECURITY_CONFIG,
   type VerificationResult 
 } from '@/lib/faceVerification';
+import { verifyCascade, type CascadeResult } from '@/lib/cascadeVerification';
 import { API_URL } from '@/lib/api';
 
 interface RegisteredUser {
@@ -52,6 +53,7 @@ export default function LoginV2Page() {
   const [loading, setLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [cascadeResult, setCascadeResult] = useState<CascadeResult | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -184,7 +186,7 @@ export default function LoginV2Page() {
     isProcessingRef.current = true;
     setStep('verifying');
     setVerificationProgress(0);
-    setStatus('Iniciando verificación segura...');
+    setStatus('Iniciando verificación multi-proveedor...');
     
     try {
       // CASO 1: No hay usuarios registrados en el sistema
@@ -195,8 +197,8 @@ export default function LoginV2Page() {
         return;
       }
       
-      // Usar el nuevo sistema de verificación mejorado
-      const result = await verifyFaceWithMultipleCaptures(
+      // Usar verificación en CASCADA (Google Vision + AWS Rekognition + Local)
+      const result = await verifyCascade(
         videoRef.current,
         registeredUsers,
         (message, progress) => {
@@ -205,28 +207,48 @@ export default function LoginV2Page() {
         }
       );
       
-      setVerificationResult(result);
+      setCascadeResult(result);
+      
+      // Convertir a VerificationResult para compatibilidad con UI
+      const verResult: VerificationResult = {
+        success: result.success,
+        user: result.user ? { id: result.user.id, name: result.user.name } : null,
+        confidence: result.confidence,
+        distance: result.success ? 0.2 : 0.8,
+        reason: result.reason,
+        details: {
+          capturesAnalyzed: 3,
+          averageDistance: result.success ? 0.2 : 0.8,
+          variance: 0.05,
+          differenceWithSecond: 0.2,
+          livenessScore: result.antiSpoofing.livenessScore,
+        }
+      };
+      setVerificationResult(verResult);
       
       if (result.success && result.user) {
         // ✅ VERIFICACIÓN EXITOSA
         stopCamera();
-        const matchedUser = registeredUsers.find(u => u.id === result.user!.id);
-        if (matchedUser) {
-          setRecognizedUser(matchedUser);
+        // Buscar el usuario completo en registeredUsers para tener todos los campos
+        const fullUser = registeredUsers.find(u => u.id === result.user!.id);
+        if (fullUser) {
+          setRecognizedUser(fullUser);
           setStep('recognized');
-          console.log(`🔐 Login seguro: ${matchedUser.name} (${result.confidence}% confianza)`);
-          setTimeout(() => doLogin(matchedUser.license), 2000);
+          console.log(`🔐 Login seguro: ${fullUser.name} (${result.confidence.toFixed(0)}% confianza)`);
+          console.log(`   Tiempo: ${result.verificationTimeMs}ms`);
+          console.log(`   Proveedores: Backend ${result.providers.backend.confidence}%, Local ${result.providers.local.confidence}%`);
+          setTimeout(() => doLogin(fullUser.license), 2000);
         }
-      } else if (result.details.capturesAnalyzed === 0) {
-        // No se detectó ningún rostro
+      } else if (!result.antiSpoofing.isRealFace) {
+        // Posible suplantación
         stopCamera();
-        setStep('no_face_detected');
-      } else if (result.distance > SECURITY_CONFIG.MAX_DISTANCE_THRESHOLD) {
-        // Rostro detectado pero no coincide - no registrado
+        setStep('verification_failed');
+      } else if (result.confidence < 50) {
+        // No se encontró coincidencia - no registrado
         stopCamera();
         setStep('not_registered');
       } else {
-        // Verificación fallida por otros motivos (ambigüedad, baja confianza, etc.)
+        // Verificación fallida por otros motivos
         stopCamera();
         setStep('verification_failed');
       }
@@ -368,8 +390,15 @@ export default function LoginV2Page() {
                 />
               </div>
               
-              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
-                🔐 Realizando {SECURITY_CONFIG.CAPTURES_FOR_VERIFICATION} capturas para máxima seguridad
+              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700 space-y-1">
+                <p>🔐 Verificación multi-proveedor en progreso</p>
+                <div className="flex items-center gap-2 text-[10px] text-blue-600">
+                  <span>Google Vision</span>
+                  <span>•</span>
+                  <span>AWS Rekognition</span>
+                  <span>•</span>
+                  <span>Face-API Local</span>
+                </div>
               </div>
             </div>
           )}
@@ -385,11 +414,16 @@ export default function LoginV2Page() {
                 <p className="text-xl font-semibold text-blue-600">{recognizedUser.name}</p>
                 <p className="text-sm text-gray-500">{recognizedUser.specialty}</p>
                 <p className="text-xs text-gray-400 mt-1">{recognizedUser.license}</p>
-                {verificationResult && (
-                  <div className="mt-2 pt-2 border-t border-gray-200">
+                {cascadeResult && (
+                  <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
                     <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                      🔐 {verificationResult.confidence}% confianza
+                      🔐 {cascadeResult.confidence.toFixed(0)}% confianza
                     </span>
+                    <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500">
+                      <span>⏱️ {cascadeResult.verificationTimeMs}ms</span>
+                      {cascadeResult.providers.backend.success && <span className="text-green-500">✓ Cloud</span>}
+                      {cascadeResult.providers.local.success && <span className="text-green-500">✓ Local</span>}
+                    </div>
                   </div>
                 )}
               </div>

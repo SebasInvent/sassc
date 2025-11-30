@@ -56,7 +56,9 @@ export interface RegisteredUser {
   id: string;
   name: string;
   license?: string;
+  specialty?: string;
   descriptor: string;
+  faceImage?: string;
 }
 
 /**
