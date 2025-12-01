@@ -6,22 +6,19 @@ import {
   Camera, 
   CheckCircle, 
   XCircle, 
-  AlertTriangle,
-  AlertCircle,
   Loader2,
   RefreshCw,
   UserPlus,
   ArrowLeft,
-  Save,
-  CreditCard,
   Shield,
-  ChevronRight
+  User,
+  Briefcase,
+  BadgeCheck,
+  Sparkles,
+  Stethoscope
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   loadModels, 
   detectFace,
@@ -30,10 +27,16 @@ import {
 } from '@/lib/faceRecognition';
 import { API_URL } from '@/lib/api';
 
-type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'capturando_cedula' | 'procesando' | 'exito' | 'error';
+type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'procesando' | 'exito' | 'error';
 
-// Roles que requieren verificación con cédula (altos mandos)
-const ROLES_REQUIRE_CEDULA = ['SUPER_ADMIN', 'ADMIN', 'DOCTOR'];
+const ROLES = [
+  { value: 'SUPER_ADMIN', label: 'Super Admin', icon: Shield, color: 'bg-purple-600' },
+  { value: 'ADMIN', label: 'Administrador', icon: Briefcase, color: 'bg-red-600' },
+  { value: 'DOCTOR', label: 'Doctor', icon: Stethoscope, color: 'bg-blue-600' },
+  { value: 'NURSE', label: 'Enfermero(a)', icon: User, color: 'bg-green-600' },
+  { value: 'PHARMACIST', label: 'Farmacéutico', icon: Sparkles, color: 'bg-orange-600' },
+  { value: 'RECEPTIONIST', label: 'Recepcionista', icon: BadgeCheck, color: 'bg-cyan-600' },
+];
 
 export default function RegistroFacialPage() {
   const router = useRouter();
@@ -43,28 +46,15 @@ export default function RegistroFacialPage() {
   const [countdown, setCountdown] = useState(3);
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [capturedDescriptors, setCapturedDescriptors] = useState<Float32Array[]>([]);
-  const [descriptor, setDescriptor] = useState<string | null>(null);
-  const [cedulaImage, setCedulaImage] = useState<string | null>(null);
-  const [cedulaNumber, setCedulaNumber] = useState<string>('');
-  
-  // Roles disponibles
-  const ROLES = [
-    { value: 'SUPER_ADMIN', label: 'Super Administrador', color: 'bg-purple-500' },
-    { value: 'ADMIN', label: 'Administrador', color: 'bg-red-500' },
-    { value: 'DOCTOR', label: 'Doctor', color: 'bg-blue-500' },
-    { value: 'NURSE', label: 'Enfermero(a)', color: 'bg-green-500' },
-    { value: 'PHARMACIST', label: 'Farmacéutico', color: 'bg-orange-500' },
-    { value: 'RECEPTIONIST', label: 'Recepcionista', color: 'bg-cyan-500' },
-  ];
+  const [generatedLicense, setGeneratedLicense] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
-  // Datos del formulario
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     specialty: '',
     role: 'DOCTOR',
   });
-  const [generatedLicense, setGeneratedLicense] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -96,10 +86,14 @@ export default function RegistroFacialPage() {
 
     setEstado('cargando_modelos');
     setErrorMsg(null);
+    setProgress(0);
 
     try {
+      setProgress(30);
       await loadModels();
+      setProgress(60);
       await startCamera();
+      setProgress(100);
     } catch (err: any) {
       setErrorMsg(err.message);
       setEstado('error');
@@ -109,41 +103,33 @@ export default function RegistroFacialPage() {
   const startCamera = async () => {
     try {
       cleanup();
-
-      console.log('📷 Solicitando acceso a cámara...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 }, 
+          facingMode: 'user' 
+        },
         audio: false
       });
       
-      console.log('✅ Stream obtenido');
       streamRef.current = stream;
-      
-      // Cambiar estado primero para que el video element se monte
       setEstado('capturando');
-      
     } catch (err: any) {
-      console.error('Error cámara:', err);
       setErrorMsg(err.message || 'Error accediendo a la cámara');
       setEstado('error');
     }
   };
 
-  // Configurar video cuando el estado cambia a 'capturando'
   useEffect(() => {
     if (estado === 'capturando' && streamRef.current && videoRef.current) {
       const video = videoRef.current;
-      
-      console.log('🎥 Configurando video...');
       video.srcObject = streamRef.current;
       video.muted = true;
       video.playsInline = true;
       
       video.onloadedmetadata = async () => {
-        console.log('📐 Video listo:', video.videoWidth, 'x', video.videoHeight);
         try {
           await video.play();
-          console.log('▶️ Video reproduciendo');
           startFaceDetection();
         } catch (e) {
           console.error('Error play:', e);
@@ -157,34 +143,20 @@ export default function RegistroFacialPage() {
       clearInterval(detectionIntervalRef.current);
     }
     
-    console.log('🔍 Iniciando detección de rostro para registro...');
-    
     detectionIntervalRef.current = setInterval(async () => {
       const video = videoRef.current;
-      if (!video) {
-        console.log('Video ref no disponible');
-        return;
-      }
-      
-      if (estado !== 'capturando') return;
-      
-      if (video.readyState < 2 || video.paused) {
-        console.log('Video no listo:', video.readyState);
-        return;
-      }
+      if (!video || estado !== 'capturando') return;
+      if (video.readyState < 2 || video.paused) return;
 
       try {
-        // Usar detectFaceOnly que es más rápido
         const detected = await detectFaceOnly(video);
-        console.log('Detección:', detected);
         setFaceDetected(detected);
       } catch (err) {
         console.error('Error detección:', err);
       }
-    }, 600);
+    }, 500);
   };
 
-  // Auto-captura
   useEffect(() => {
     let countdownTimer: NodeJS.Timeout | null = null;
     
@@ -214,16 +186,22 @@ export default function RegistroFacialPage() {
     
     if (!video || !canvas) return;
 
-    // Capturar imagen
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
+    // Limitar resolución para móviles
+    const maxSize = 480;
+    const videoWidth = video.videoWidth || 640;
+    const videoHeight = video.videoHeight || 480;
+    const scale = Math.min(maxSize / videoWidth, maxSize / videoHeight, 1);
+    
+    canvas.width = Math.round(videoWidth * scale);
+    canvas.height = Math.round(videoHeight * scale);
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    ctx.drawImage(video, 0, 0);
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    // NO espejamos - capturamos tal cual para que coincida en verificación
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
-    // Detectar y guardar descriptor
     const desc = await detectFace(video);
     
     if (desc) {
@@ -232,51 +210,34 @@ export default function RegistroFacialPage() {
       setCapturedImages(newImages);
       setCapturedDescriptors(newDescriptors);
       
-      console.log(`📸 Captura ${newImages.length}/3 - Descriptor (primeros 5):`, Array.from(desc.slice(0, 5)).map(n => n.toFixed(4)));
-      
-      // Si es la tercera captura, PROMEDIAR descriptores
       if (newImages.length >= 3) {
-        // Promediar los 3 descriptores para mayor precisión
+        // Promediar descriptores
         const avgDescriptor = new Float32Array(128);
         for (let i = 0; i < 128; i++) {
           avgDescriptor[i] = (newDescriptors[0][i] + newDescriptors[1][i] + newDescriptors[2][i]) / 3;
         }
         
-        console.log('📊 Descriptor PROMEDIADO (primeros 5):', Array.from(avgDescriptor.slice(0, 5)).map(n => n.toFixed(4)));
-        
         const descriptorStr = descriptorToString(avgDescriptor);
-        setDescriptor(descriptorStr);
         cleanup();
-        
-        // Si es un alto mando, ir a captura de cédula
-        if (ROLES_REQUIRE_CEDULA.includes(formData.role)) {
-          setEstado('capturando_cedula');
-        } else {
-          // Si no requiere cédula, guardar directamente
-          await saveRegistration(descriptorStr, imageBase64, null);
-        }
+        await saveRegistration(descriptorStr, imageBase64);
       }
     }
   };
 
-  // Función para guardar el registro en el servidor
-  const saveRegistration = async (faceDescriptor: string, faceImage: string, cedulaImg: string | null) => {
+  const saveRegistration = async (faceDescriptor: string, faceImage: string) => {
     setEstado('procesando');
     
     try {
-      console.log('📤 Enviando registro al servidor...');
       const response = await fetch(`${API_URL}/auth/register-new-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firstName: formData.firstName,
           lastName: formData.lastName,
-          specialty: formData.specialty || formData.role || 'General',
+          specialty: formData.specialty || formData.role,
           role: formData.role,
-          faceDescriptor: faceDescriptor,
-          faceImage: faceImage,
-          cedulaImage: cedulaImg,
-          cedulaNumber: cedulaNumber || null,
+          faceDescriptor,
+          faceImage,
         }),
       });
 
@@ -286,265 +247,135 @@ export default function RegistroFacialPage() {
       }
 
       const data = await response.json();
-      console.log('✅ Registro exitoso:', data);
       setGeneratedLicense(data.user.license);
       setEstado('exito');
       
-      // Redirigir después de mostrar la licencia
-      setTimeout(() => {
-        router.push('/login');
-      }, 4000);
-      
     } catch (err: any) {
-      console.error('❌ Error:', err);
       setErrorMsg(err.message || 'Error guardando registro');
       setEstado('error');
     }
   };
 
-  // Función para capturar la cédula
-  const captureCedula = async () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    if (!video || !canvas) return;
-
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.drawImage(video, 0, 0);
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
-    
-    setCedulaImage(imageBase64);
-    cleanup();
-    
-    // Guardar registro con la cédula
-    await saveRegistration(
-      descriptor!, 
-      capturedImages[capturedImages.length - 1], 
-      imageBase64
-    );
-  };
-
-  // Función para saltar la captura de cédula
-  const skipCedula = async () => {
-    cleanup();
-    await saveRegistration(
-      descriptor!, 
-      capturedImages[capturedImages.length - 1], 
-      null
-    );
-  };
-
-  // Función para iniciar cámara para cédula
-  const startCedulaCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'environment' // Cámara trasera para documentos
-        },
-        audio: false
-      });
-      
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-    } catch (err: any) {
-      // Si falla la cámara trasera, usar la frontal
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-    }
-  };
-
-  // Efecto para iniciar cámara cuando se entra a captura de cédula
-  useEffect(() => {
-    if (estado === 'capturando_cedula') {
-      startCedulaCamera();
-    }
-  }, [estado]);
-
-  const handleSaveRegistration = async () => {
-    if (!descriptor) {
-      setErrorMsg('No se capturó el descriptor facial');
-      return;
-    }
-
-    try {
-      console.log('📤 Enviando registro al servidor...');
-      const response = await fetch(`${API_URL}/auth/register-new-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          specialty: formData.specialty || 'General',
-          faceDescriptor: descriptor,
-          faceImage: capturedImages[capturedImages.length - 1],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error guardando registro');
-      }
-
-      const data = await response.json();
-      console.log('✅ Registro exitoso:', data);
-      
-      // Guardar la licencia generada para mostrarla
-      setGeneratedLicense(data.user.license);
-      
-      // Esperar un momento para que el usuario vea su licencia
-      setTimeout(() => {
-        router.push('/login');
-      }, 3000);
-      
-    } catch (err: any) {
-      console.error('❌ Error:', err);
-      setErrorMsg(err.message || 'Error guardando registro');
-    }
-  };
-
   const retry = () => {
     setCapturedImages([]);
-    setDescriptor(null);
+    setCapturedDescriptors([]);
     setErrorMsg(null);
     setCountdown(3);
     setEstado('formulario');
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 flex items-center justify-center p-4">
-      <canvas ref={canvasRef} className="hidden" />
-      <video ref={videoRef} autoPlay playsInline muted className="hidden" />
+  const selectedRole = ROLES.find(r => r.value === formData.role);
 
-      <Card className="w-full max-w-lg backdrop-blur-xl bg-white/10 border-white/20 shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-4">
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <canvas ref={canvasRef} className="hidden" />
+      
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-3">
             <UserPlus className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">
-            Registro Facial
-          </CardTitle>
-          <CardDescription className="text-white/70">
-            Registre su rostro para acceder al sistema Medicare
-          </CardDescription>
-        </CardHeader>
+          <h1 className="text-2xl font-bold text-gray-900">SASSC</h1>
+          <p className="text-gray-500 text-sm">Registro de Usuario</p>
+        </div>
 
-        <CardContent className="space-y-6">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          
           {/* Estado: Formulario */}
           {estado === 'formulario' && (
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-5">
+              {/* Nombre y Apellido */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-white">Nombre *</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre</label>
                   <Input
-                    id="firstName"
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                     placeholder="Juan"
-                    className="bg-white/90"
+                    className="h-11"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-white">Apellido *</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Apellido</label>
                   <Input
-                    id="lastName"
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                     placeholder="Pérez"
-                    className="bg-white/90"
+                    className="h-11"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role" className="text-white">Rol en el Sistema *</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {ROLES.map((role) => (
-                    <button
-                      key={role.value}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, role: role.value }))}
-                      className={`p-3 rounded-lg border-2 transition-all text-left ${
-                        formData.role === role.value
-                          ? 'border-white bg-white/20 text-white'
-                          : 'border-white/30 text-white/70 hover:border-white/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${role.color}`} />
-                        <span className="text-sm font-medium">{role.label}</span>
-                      </div>
-                    </button>
-                  ))}
+              {/* Selector de Rol */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {ROLES.map((role) => {
+                    const Icon = role.icon;
+                    const isSelected = formData.role === role.value;
+                    return (
+                      <button
+                        key={role.value}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, role: role.value }))}
+                        className={`p-2.5 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                          isSelected
+                            ? `border-blue-600 bg-blue-50`
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? role.color : 'bg-gray-100'}`}>
+                          <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-gray-500'}`} />
+                        </div>
+                        <span className={`text-xs font-medium ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}>
+                          {role.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="specialty" className="text-white">Especialidad / Área</Label>
+              {/* Especialidad */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Especialidad (opcional)</label>
                 <Input
-                  id="specialty"
                   value={formData.specialty}
                   onChange={(e) => setFormData(prev => ({ ...prev, specialty: e.target.value }))}
-                  placeholder="Medicina General, Administración, etc."
-                  className="bg-white/90"
+                  placeholder="Medicina General, Cardiología..."
+                  className="h-11"
                 />
               </div>
 
-              <div className="bg-blue-500/20 rounded-lg p-3 border border-blue-400/30">
-                <p className="text-sm text-blue-200">
-                  📋 Su licencia será generada automáticamente al completar el registro.
+              {/* Info */}
+              <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-blue-700">
+                  Se generará una licencia única al completar el registro facial.
                 </p>
               </div>
 
-              {/* Aviso de cédula para altos mandos */}
-              {ROLES_REQUIRE_CEDULA.includes(formData.role) && (
-                <div className="bg-amber-500/20 rounded-lg p-3 border border-amber-400/30 flex items-start gap-2">
-                  <Shield className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-200">Verificación adicional requerida</p>
-                    <p className="text-xs text-amber-200/70 mt-1">
-                      Como {formData.role === 'SUPER_ADMIN' ? 'Super Administrador' : formData.role === 'ADMIN' ? 'Administrador' : 'Doctor'}, 
-                      se le pedirá una foto de su cédula para firmas de alto nivel.
-                    </p>
-                  </div>
+              {errorMsg && (
+                <div className="bg-red-50 rounded-xl p-3 flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <p className="text-sm text-red-700">{errorMsg}</p>
                 </div>
               )}
 
-              {errorMsg && (
-                <Alert variant="destructive" className="bg-red-500/90 border-red-400/50">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{errorMsg}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button type="submit" className="w-full" size="lg">
+              <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700">
                 <Camera className="w-5 h-5 mr-2" />
                 Continuar con Captura Facial
               </Button>
 
-              <Button 
-                type="button" 
-                variant="ghost" 
-                className="w-full text-white/70 hover:text-white"
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => router.push('/login')}
+                className="w-full text-gray-500"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver al Login
@@ -554,264 +385,188 @@ export default function RegistroFacialPage() {
 
           {/* Estado: Cargando Modelos */}
           {estado === 'cargando_modelos' && (
-            <div className="text-center space-y-4 py-8">
-              <Loader2 className="w-12 h-12 mx-auto text-blue-400 animate-spin" />
-              <p className="text-white/80">Cargando modelos de IA...</p>
+            <div className="p-8 text-center">
+              <div className="relative w-20 h-20 mx-auto mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
+                <div 
+                  className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold text-gray-900">{progress}%</span>
+                </div>
+              </div>
+              <p className="text-gray-900 font-medium">Preparando sistema</p>
+              <p className="text-gray-500 text-sm mt-1">Cargando modelos de IA...</p>
             </div>
           )}
 
           {/* Estado: Capturando */}
           {estado === 'capturando' && (
-            <div className="space-y-4">
-              <div className="text-center text-white/80 text-sm">
-                Captura {capturedImages.length + 1} de 3
-              </div>
-
-              {/* Miniaturas de capturas */}
-              {capturedImages.length > 0 && (
-                <div className="flex justify-center gap-2">
-                  {capturedImages.map((img, i) => (
-                    <div key={i} className="w-16 h-16 rounded-lg overflow-hidden border-2 border-green-500">
-                      <img src={img} alt={`Captura ${i + 1}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                  {Array.from({ length: 3 - capturedImages.length }).map((_, i) => (
-                    <div key={`empty-${i}`} className="w-16 h-16 rounded-lg border-2 border-white/30 flex items-center justify-center">
-                      <Camera className="w-6 h-6 text-white/30" />
-                    </div>
+            <div className="p-6 space-y-4">
+              {/* Progress */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Captura {capturedImages.length + 1} de 3</span>
+                <div className="flex gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className={`w-8 h-1.5 rounded-full ${
+                        i < capturedImages.length 
+                          ? 'bg-green-500' 
+                          : i === capturedImages.length 
+                            ? 'bg-blue-500' 
+                            : 'bg-gray-200'
+                      }`}
+                    />
                   ))}
                 </div>
-              )}
+              </div>
 
               {/* Video */}
-              <div className="relative rounded-xl overflow-hidden bg-gray-900 aspect-video">
+              <div className="relative rounded-2xl overflow-hidden bg-gray-900 aspect-[4/3]">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
                   className="w-full h-full object-cover"
+                  style={{ transform: 'scaleX(-1)' }} // Solo visual
                 />
                 
-                {/* Guía facial */}
+                {/* Marco facial */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className={`w-48 h-64 border-4 rounded-full transition-all duration-300 ${
-                    faceDetected ? 'border-green-500 shadow-lg shadow-green-500/50' : 'border-white/50'
+                  <div className={`w-40 h-52 rounded-full border-4 transition-all duration-300 ${
+                    faceDetected 
+                      ? 'border-green-500 shadow-lg shadow-green-500/30' 
+                      : 'border-white/50'
                   }`} />
+                  
+                  {/* Countdown */}
+                  {faceDetected && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+                        <span className="text-3xl font-bold text-white">{countdown}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Countdown */}
-                {faceDetected && countdown < 3 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <span className="text-7xl font-bold text-white">{countdown}</span>
-                  </div>
-                )}
-
-                {/* Indicador */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className={`px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                    faceDetected ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'
+                {/* Status */}
+                <div className="absolute bottom-3 left-3 right-3">
+                  <div className={`rounded-xl px-4 py-2.5 flex items-center gap-2 ${
+                    faceDetected 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-amber-500 text-white'
                   }`}>
                     {faceDetected ? (
                       <>
-                        <CheckCircle className="w-5 h-5" />
-                        <span>Rostro detectado - Capturando en {countdown}...</span>
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">Rostro detectado - Capturando en {countdown}...</span>
                       </>
                     ) : (
                       <>
-                        <AlertTriangle className="w-5 h-5" />
-                        <span>Posicione su rostro en el círculo</span>
+                        <Camera className="w-4 h-4" />
+                        <span className="text-sm font-medium">Posicione su rostro en el círculo</span>
                       </>
                     )}
                   </div>
                 </div>
               </div>
 
-              <Button onClick={captureImage} disabled={!faceDetected} className="w-full" size="lg">
-                <Camera className="w-5 h-5 mr-2" />
-                Capturar Ahora
-              </Button>
-            </div>
-          )}
-
-          {/* Estado: Capturando Cédula */}
-          {estado === 'capturando_cedula' && (
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="text-center">
-                <div className="w-12 h-12 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center mb-3">
-                  <CreditCard className="w-6 h-6 text-amber-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white">Captura de Cédula</h3>
-                <p className="text-sm text-white/70">
-                  Como {formData.role === 'SUPER_ADMIN' ? 'Super Administrador' : formData.role === 'ADMIN' ? 'Administrador' : 'Doctor'}, 
-                  necesitamos una foto de su cédula para firmas de alto nivel.
-                </p>
-              </div>
-
-              {/* Indicador de seguridad */}
-              <div className="bg-amber-500/20 rounded-lg p-3 border border-amber-400/30 flex items-start gap-2">
-                <Shield className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-200">
-                  Su cédula será usada para verificar su identidad en acciones críticas del sistema 
-                  (autorizaciones, prescripciones, firmas).
-                </p>
-              </div>
-
-              {/* Input para número de cédula */}
-              <div className="space-y-2">
-                <Label htmlFor="cedulaNumber" className="text-white">Número de Cédula</Label>
-                <Input
-                  id="cedulaNumber"
-                  value={cedulaNumber}
-                  onChange={(e) => setCedulaNumber(e.target.value)}
-                  placeholder="Ej: 1234567890"
-                  className="bg-white/90"
-                />
-              </div>
-
-              {/* Video para captura */}
-              <div className="relative rounded-xl overflow-hidden bg-gray-900 aspect-video">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Guía para cédula */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-72 h-44 border-4 border-white/50 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-12 h-12 text-white/30" />
-                  </div>
-                </div>
-
-                {/* Indicador */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="px-4 py-3 rounded-lg text-sm font-medium bg-amber-500 text-white flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    <span>Posicione su cédula dentro del recuadro</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones */}
-              <div className="space-y-2">
-                <Button onClick={captureCedula} className="w-full bg-amber-500 hover:bg-amber-600" size="lg">
-                  <Camera className="w-5 h-5 mr-2" />
-                  Capturar Cédula
-                </Button>
-                
-                <Button onClick={skipCedula} variant="ghost" className="w-full text-white/60 hover:text-white">
-                  <ChevronRight className="w-4 h-4 mr-2" />
-                  Omitir por ahora
-                </Button>
-              </div>
-
-              {/* Miniaturas de capturas faciales */}
-              <div className="pt-2 border-t border-white/10">
-                <p className="text-xs text-white/50 mb-2">Capturas faciales completadas:</p>
+              {/* Miniaturas */}
+              {capturedImages.length > 0 && (
                 <div className="flex justify-center gap-2">
                   {capturedImages.map((img, i) => (
-                    <div key={i} className="w-12 h-12 rounded-lg overflow-hidden border-2 border-green-500">
-                      <img src={img} alt={`Captura ${i + 1}`} className="w-full h-full object-cover" />
+                    <div key={i} className="relative">
+                      <img 
+                        src={img} 
+                        alt={`Captura ${i + 1}`} 
+                        className="w-14 h-14 rounded-xl object-cover border-2 border-green-500"
+                        style={{ transform: 'scaleX(-1)' }}
+                      />
+                      <CheckCircle className="absolute -top-1 -right-1 w-4 h-4 text-green-500 bg-white rounded-full" />
                     </div>
                   ))}
                 </div>
-              </div>
+              )}
+
+              <Button 
+                onClick={captureImage} 
+                disabled={!faceDetected}
+                variant="outline"
+                className="w-full h-11"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Capturar Manualmente
+              </Button>
             </div>
           )}
 
           {/* Estado: Procesando */}
           {estado === 'procesando' && (
-            <div className="text-center space-y-4 py-8">
-              <Loader2 className="w-12 h-12 mx-auto text-blue-400 animate-spin" />
-              <p className="text-white/80">Procesando registro...</p>
+            <div className="p-8 text-center">
+              <Loader2 className="w-12 h-12 mx-auto text-blue-600 animate-spin mb-4" />
+              <p className="text-gray-900 font-medium">Procesando registro</p>
+              <p className="text-gray-500 text-sm mt-1">Guardando datos biométricos...</p>
             </div>
           )}
 
           {/* Estado: Éxito */}
           {estado === 'exito' && (
-            <div className="text-center space-y-6 py-4">
-              <div className="w-20 h-20 mx-auto bg-green-500/20 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-10 h-10 text-green-400" />
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               
-              <div>
-                <p className="text-xl font-bold text-white">¡Captura Exitosa!</p>
-                <p className="text-white/70 mt-2">
-                  {formData.firstName} {formData.lastName}, su rostro ha sido capturado.
-                </p>
-              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">¡Registro Exitoso!</h2>
+              <p className="text-gray-500 mb-4">
+                Bienvenido, {formData.firstName} {formData.lastName}
+              </p>
 
-              {/* Miniaturas finales */}
-              <div className="flex justify-center gap-2 flex-wrap">
-                {capturedImages.map((img, i) => (
-                  <div key={i} className="w-16 h-16 rounded-lg overflow-hidden border-2 border-green-500">
-                    <img src={img} alt={`Captura ${i + 1}`} className="w-full h-full object-cover" />
-                  </div>
-                ))}
-                {cedulaImage && (
-                  <div className="w-24 h-16 rounded-lg overflow-hidden border-2 border-amber-500">
-                    <img src={cedulaImage} alt="Cédula" className="w-full h-full object-cover" />
-                  </div>
-                )}
-              </div>
-
-              {/* Indicador de cédula registrada */}
-              {cedulaImage && (
-                <div className="bg-amber-500/20 rounded-lg p-2 border border-amber-400/30 flex items-center justify-center gap-2">
-                  <Shield className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs text-amber-200">Cédula registrada para firmas de alto nivel</span>
-                </div>
-              )}
-
-              {/* Mostrar licencia generada */}
               {generatedLicense && (
-                <div className="bg-green-500/20 rounded-xl p-4 border border-green-400/30">
-                  <p className="text-sm text-green-200 mb-2">Su licencia médica es:</p>
-                  <p className="text-2xl font-bold text-white font-mono">{generatedLicense}</p>
-                  <p className="text-xs text-green-200/70 mt-2">Redirigiendo al login en 3 segundos...</p>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                  <p className="text-gray-500 text-sm mb-1">Su licencia de acceso</p>
+                  <p className="text-2xl font-mono font-bold text-gray-900">
+                    {generatedLicense}
+                  </p>
+                  <p className="text-gray-400 text-xs mt-2">
+                    Guarde esta licencia para acceso manual
+                  </p>
                 </div>
               )}
 
-              {!generatedLicense && (
-                <div className="space-y-2">
-                  <Button onClick={handleSaveRegistration} className="w-full" size="lg">
-                    <Save className="w-5 h-5 mr-2" />
-                    Guardar y Obtener Licencia
-                  </Button>
-                </div>
-              )}
-
-              {errorMsg && (
-                <Alert variant="destructive" className="bg-red-500/90 border-red-400/50">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{errorMsg}</AlertDescription>
-                </Alert>
-              )}
+              <Button 
+                onClick={() => router.push('/login')}
+                className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+              >
+                Ir al Login
+              </Button>
             </div>
           )}
 
           {/* Estado: Error */}
           {estado === 'error' && (
-            <div className="text-center space-y-4 py-8">
-              <div className="w-20 h-20 mx-auto bg-red-500/20 rounded-full flex items-center justify-center">
-                <XCircle className="w-10 h-10 text-red-400" />
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <XCircle className="w-8 h-8 text-red-600" />
               </div>
-              <div>
-                <p className="text-xl font-bold text-white">Error</p>
-                <p className="text-white/70 mt-2">{errorMsg}</p>
-              </div>
-              <Button onClick={retry} variant="outline" className="w-full">
+              
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Error</h2>
+              <p className="text-gray-500 mb-4">{errorMsg}</p>
+
+              <Button onClick={retry} className="w-full h-11">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reintentar
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-gray-400 text-xs mt-4">
+          Software Anticorrupción Sistema Salud Colombiano
+        </p>
+      </div>
     </div>
   );
 }
