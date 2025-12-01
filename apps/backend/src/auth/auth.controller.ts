@@ -385,7 +385,8 @@ export class AuthController {
         }
       }
 
-      if (bestMatch && bestMatch.similarity >= 80) {
+      // Umbral de 75% para tolerar diferencias entre cámaras (PC vs móvil)
+      if (bestMatch && bestMatch.similarity >= 75) {
         return {
           success: true,
           matched: true,
@@ -400,7 +401,7 @@ export class AuthController {
         matched: false,
         user: null,
         similarity: bestMatch?.similarity || 0,
-        message: 'No se encontró coincidencia suficiente',
+        message: `No se encontró coincidencia suficiente (mejor: ${bestMatch?.similarity?.toFixed(1) || 0}%)`,
       };
 
     } catch (error: any) {

@@ -93,16 +93,33 @@ export async function verifyCascade(
   
   // Capturar imagen del video
   const canvas = document.createElement('canvas');
-  canvas.width = videoElement.videoWidth || 640;
-  canvas.height = videoElement.videoHeight || 480;
+  const videoWidth = videoElement.videoWidth || 640;
+  const videoHeight = videoElement.videoHeight || 480;
+  canvas.width = videoWidth;
+  canvas.height = videoHeight;
   const ctx = canvas.getContext('2d');
   
   if (!ctx) {
     return createFailResult('Error capturando imagen', 0);
   }
   
+  // Detectar si es iOS Safari (cámara frontal puede estar espejada)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  
+  if (isIOS) {
+    // En iOS, des-espejar la imagen para que coincida con el registro
+    ctx.translate(videoWidth, 0);
+    ctx.scale(-1, 1);
+  }
+  
   ctx.drawImage(videoElement, 0, 0);
-  const imageBase64 = canvas.toDataURL('image/jpeg', 0.85);
+  
+  // Restaurar transformación
+  if (isIOS) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  
+  const imageBase64 = canvas.toDataURL('image/jpeg', 0.92); // Mayor calidad para iOS
   
   onProgress?.('Verificando con Google Vision...', 15);
   
