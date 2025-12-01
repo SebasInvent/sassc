@@ -6,14 +6,18 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Stethoscope, 
   Loader2, 
   CheckCircle, 
   XCircle,
   Camera,
   UserPlus,
   KeyRound,
-  RefreshCw
+  RefreshCw,
+  Scan,
+  Fingerprint,
+  Shield,
+  Eye,
+  Lock
 } from 'lucide-react';
 import { 
   loadModels, 
@@ -301,104 +305,155 @@ export default function LoginV2Page() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 overflow-hidden relative">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-full blur-3xl" />
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-3">
-            <Stethoscope className="h-8 w-8 text-white" />
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 mb-4 shadow-lg shadow-cyan-500/25">
+            <Scan className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">SASSC</h1>
-          <p className="text-gray-500 text-sm">Software Anticorrupción Sistema Salud Colombiano</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">SASSC</h1>
+          <p className="text-cyan-400/80 text-sm font-medium mt-1">Biometric Identity System</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-700/50 overflow-hidden shadow-2xl">
           
           {/* Loading */}
           {step === 'loading' && (
-            <div className="p-8 text-center">
-              <Loader2 className="w-12 h-12 mx-auto text-blue-600 animate-spin mb-4" />
-              <p className="text-gray-600">{status}</p>
+            <div className="p-10 text-center">
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-2 border-slate-700" />
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center">
+                  <Fingerprint className="w-8 h-8 text-cyan-400 animate-pulse" />
+                </div>
+              </div>
+              <p className="text-white font-semibold text-lg">Inicializando</p>
+              <p className="text-slate-400 text-sm mt-2">{status}</p>
             </div>
           )}
 
           {/* Camera */}
           {step === 'camera' && (
-            <div className="p-4">
-              <div className="relative rounded-xl overflow-hidden mb-4" style={{backgroundColor: '#1a1a1a'}}>
-                <video 
-                  ref={videoRef} 
-                  className="w-full"
-                  style={{ minHeight: '300px', transform: 'scaleX(-1)' }}
-                  autoPlay 
-                  playsInline 
-                  muted 
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-48 h-48 border-4 border-white/50 rounded-full" />
-                </div>
-                <div className="absolute bottom-2 left-2 right-2 bg-black/60 text-white text-sm p-2 rounded-lg text-center">
-                  {status}
-                </div>
+            <div className="p-5">
+              {/* Status indicator */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-cyan-400 text-xs font-medium uppercase tracking-wider">
+                  Escaneando
+                </span>
               </div>
-              
-              <Button onClick={captureManually} className="w-full mb-3" size="lg">
-                <Camera className="w-5 h-5 mr-2" />
-                Verificar Identidad
-              </Button>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => { stopCamera(); setStep('manual_login'); }}>
-                  <KeyRound className="w-4 h-4 mr-2" />
-                  Usar Licencia
-                </Button>
-                <Button variant="outline" onClick={() => router.push('/registro-facial')}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Registrarse
-                </Button>
-              </div>
-            </div>
-          )}
 
-          {/* Verifying - Proceso de verificación segura */}
-          {step === 'verifying' && (
-            <div className="p-8 text-center">
-              <div className="relative mb-6">
+              {/* Video Container */}
+              <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-[4/3] mb-4">
                 <video 
                   ref={videoRef} 
-                  className="w-32 h-32 mx-auto rounded-full object-cover border-4 border-blue-500"
+                  className="w-full h-full object-cover"
                   style={{ transform: 'scaleX(-1)' }}
                   autoPlay 
                   playsInline 
                   muted 
                 />
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full">
-                    Verificando...
+                
+                {/* Scanning overlay */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {/* Corner brackets */}
+                  <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-cyan-400/60 rounded-tl-lg" />
+                  <div className="absolute top-4 right-4 w-12 h-12 border-r-2 border-t-2 border-cyan-400/60 rounded-tr-lg" />
+                  <div className="absolute bottom-4 left-4 w-12 h-12 border-l-2 border-b-2 border-cyan-400/60 rounded-bl-lg" />
+                  <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-cyan-400/60 rounded-br-lg" />
+                  
+                  {/* Face oval guide */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-44 h-56 rounded-[50%] border-2 border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.2)]" />
+                  </div>
+                </div>
+
+                {/* Status bar */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900/90 to-transparent">
+                  <div className="bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2">
+                    <Eye className="w-4 h-4 text-cyan-400" />
+                    <span className="text-sm font-medium text-slate-300">{status}</span>
                   </div>
                 </div>
               </div>
               
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Verificación Segura</h2>
-              <p className="text-gray-500 text-sm mb-4">{status}</p>
+              <Button 
+                onClick={captureManually} 
+                className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 mb-3"
+              >
+                <Shield className="w-5 h-5 mr-2" />
+                Verificar Identidad
+              </Button>
               
-              {/* Barra de progreso */}
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => { stopCamera(); setStep('manual_login'); }}
+                  className="h-12 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl"
+                >
+                  <KeyRound className="w-4 h-4 mr-2" />
+                  Licencia
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/registro-facial')}
+                  className="h-12 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Registro
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Verifying */}
+          {step === 'verifying' && (
+            <div className="p-8 text-center">
+              <div className="relative mb-6">
+                <video 
+                  ref={videoRef} 
+                  className="w-28 h-28 mx-auto rounded-full object-cover border-2 border-cyan-500/50"
+                  style={{ transform: 'scaleX(-1)' }}
+                  autoPlay 
+                  playsInline 
+                  muted 
+                />
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-ping opacity-30" />
+              </div>
+              
+              <h2 className="text-xl font-bold text-white mb-2">Verificación Biométrica</h2>
+              <p className="text-slate-400 text-sm mb-4">{status}</p>
+              
+              {/* Progress bar */}
+              <div className="w-full h-1 bg-slate-800 rounded-full mb-4 overflow-hidden">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 transition-all duration-300"
                   style={{ width: `${verificationProgress}%` }}
                 />
               </div>
               
-              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700 space-y-1">
-                <p>🔐 Verificación multi-proveedor en progreso</p>
-                <div className="flex items-center gap-2 text-[10px] text-blue-600">
-                  <span>Google Vision</span>
-                  <span>•</span>
-                  <span>AWS Rekognition</span>
-                  <span>•</span>
-                  <span>Face-API Local</span>
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Lock className="w-4 h-4 text-cyan-400" />
+                  <span className="text-cyan-400 text-xs font-medium">Multi-Provider Verification</span>
+                </div>
+                <div className="flex items-center justify-center gap-3 text-xs text-slate-500">
+                  <span>Cloud AI</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-600" />
+                  <span>AWS</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-600" />
+                  <span>Local</span>
                 </div>
               </div>
             </div>
@@ -407,178 +462,165 @@ export default function LoginV2Page() {
           {/* Recognized */}
           {step === 'recognized' && recognizedUser && (
             <div className="p-8 text-center">
-              <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle className="w-10 h-10 text-green-600" />
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center mb-6">
+                <CheckCircle className="w-10 h-10 text-cyan-400" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Identidad Verificada!</h2>
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <p className="text-xl font-semibold text-blue-600">{recognizedUser.name}</p>
-                <p className="text-sm text-gray-500">{recognizedUser.specialty}</p>
-                <p className="text-xs text-gray-400 mt-1">{recognizedUser.license}</p>
+              
+              <h2 className="text-2xl font-bold text-white mb-2">Identidad Verificada</h2>
+              
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
+                <p className="text-xl font-semibold text-cyan-400">{recognizedUser.name}</p>
+                <p className="text-sm text-slate-400 mt-1">{recognizedUser.specialty}</p>
+                <p className="text-xs text-slate-500 mt-2 font-mono">{recognizedUser.license}</p>
+                
                 {cascadeResult && (
-                  <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
-                    <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                      🔐 {cascadeResult.confidence.toFixed(0)}% confianza
-                    </span>
-                    <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500">
-                      <span>⏱️ {cascadeResult.verificationTimeMs}ms</span>
-                      {cascadeResult.providers.backend.success && <span className="text-green-500">✓ Cloud</span>}
-                      {cascadeResult.providers.local.success && <span className="text-green-500">✓ Local</span>}
+                  <div className="mt-4 pt-4 border-t border-slate-700">
+                    <div className="inline-flex items-center gap-2 text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-full">
+                      <Shield className="w-3 h-3" />
+                      {cascadeResult.confidence.toFixed(0)}% confianza
+                    </div>
+                    <div className="flex items-center justify-center gap-3 mt-2 text-xs text-slate-500">
+                      <span>{cascadeResult.verificationTimeMs}ms</span>
+                      {cascadeResult.providers.backend.success && <span className="text-cyan-400">✓ Cloud</span>}
+                      {cascadeResult.providers.local.success && <span className="text-cyan-400">✓ Local</span>}
                     </div>
                   </div>
                 )}
               </div>
+              
               {loading ? (
-                <div className="flex items-center justify-center gap-2 text-green-600">
+                <div className="flex items-center justify-center gap-2 text-cyan-400">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Iniciando sesión...</span>
                 </div>
               ) : (
-                <p className="text-green-600">Redirigiendo al dashboard...</p>
+                <p className="text-cyan-400">Redirigiendo...</p>
               )}
             </div>
           )}
 
-          {/* Not Registered - Usuario no está en el sistema */}
+          {/* Not Registered */}
           {step === 'not_registered' && (
             <div className="p-8 text-center">
-              <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <UserPlus className="w-10 h-10 text-blue-600" />
+              <div className="w-20 h-20 mx-auto rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-6">
+                <UserPlus className="w-10 h-10 text-slate-400" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">¡No estás registrado!</h2>
-              <p className="text-gray-500 mb-2">Tu rostro no se encuentra en nuestro sistema.</p>
-              <p className="text-gray-500 mb-6">Para acceder a SASSC, primero debes registrarte.</p>
+              
+              <h2 className="text-2xl font-bold text-white mb-2">No Registrado</h2>
+              <p className="text-slate-400 mb-6">Tu rostro no está en el sistema. Regístrate para continuar.</p>
               
               <div className="space-y-3">
                 <Button 
                   onClick={() => router.push('/registro-facial')} 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  size="lg"
+                  className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25"
                 >
-                  <UserPlus className="w-5 h-5 mr-2" />
+                  <Scan className="w-5 h-5 mr-2" />
                   Registrarme Ahora
                 </Button>
                 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">o si ya tienes cuenta</span>
-                  </div>
-                </div>
-                
-                <Button variant="outline" onClick={retry} className="w-full">
+                <Button 
+                  variant="outline" 
+                  onClick={retry} 
+                  className="w-full h-12 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl"
+                >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Intentar de Nuevo
-                </Button>
-                <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full text-gray-500">
-                  Ingresar con Licencia
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Verification Failed - Verificación fallida por seguridad */}
+          {/* Verification Failed */}
           {step === 'verification_failed' && (
             <div className="p-8 text-center">
-              <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <XCircle className="w-10 h-10 text-red-600" />
+              <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6">
+                <XCircle className="w-10 h-10 text-red-400" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Verificación Fallida</h2>
-              <p className="text-gray-500 mb-4">
-                {verificationResult?.reason || 'No se pudo verificar tu identidad de forma segura.'}
+              
+              <h2 className="text-2xl font-bold text-white mb-2">Verificación Fallida</h2>
+              <p className="text-slate-400 mb-6">
+                {verificationResult?.reason || 'No se pudo verificar tu identidad.'}
               </p>
               
-              {verificationResult && (
-                <div className="bg-gray-50 rounded-lg p-3 mb-4 text-xs text-left">
-                  <p className="font-medium text-gray-700 mb-1">Detalles de seguridad:</p>
-                  <ul className="text-gray-500 space-y-1">
-                    <li>• Capturas analizadas: {verificationResult.details.capturesAnalyzed}</li>
-                    <li>• Confianza: {verificationResult.confidence}%</li>
-                    {verificationResult.details.variance > 0 && (
-                      <li>• Estabilidad: {verificationResult.details.variance < 0.1 ? 'Buena' : 'Mejorable'}</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <Button onClick={retry} className="w-full">
+              <div className="space-y-3">
+                <Button 
+                  onClick={retry} 
+                  className="w-full h-14 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700"
+                >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Intentar de Nuevo
                 </Button>
-                <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setStep('manual_login')} 
+                  className="w-full text-slate-400 hover:text-white"
+                >
                   Ingresar con Licencia
                 </Button>
               </div>
             </div>
           )}
 
-          {/* No Face Detected - Problema técnico */}
+          {/* No Face Detected */}
           {step === 'no_face_detected' && (
             <div className="p-8 text-center">
-              <div className="w-20 h-20 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                <Camera className="w-10 h-10 text-amber-600" />
+              <div className="w-20 h-20 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6">
+                <Camera className="w-10 h-10 text-amber-400" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">No detectamos tu rostro</h2>
-              <p className="text-gray-500 mb-4">Asegúrate de:</p>
               
-              <ul className="text-left text-sm text-gray-600 mb-6 space-y-2 max-w-xs mx-auto">
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500">•</span>
-                  Estar en un lugar bien iluminado
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500">•</span>
-                  Mirar directamente a la cámara
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500">•</span>
-                  No usar gafas de sol o cubrebocas
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500">•</span>
-                  Mantener el rostro dentro del círculo
-                </li>
-              </ul>
+              <h2 className="text-2xl font-bold text-white mb-2">Rostro No Detectado</h2>
+              <p className="text-slate-400 mb-6">Asegúrate de tener buena iluminación y mirar a la cámara.</p>
               
-              <div className="space-y-2">
-                <Button onClick={retry} className="w-full">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Intentar de Nuevo
-                </Button>
-                <Button variant="ghost" onClick={() => setStep('manual_login')} className="w-full">
-                  Ingresar con Licencia
-                </Button>
-              </div>
+              <Button 
+                onClick={retry} 
+                className="w-full h-14 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Intentar de Nuevo
+              </Button>
             </div>
           )}
 
           {/* Manual Login */}
           {step === 'manual_login' && (
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">Ingreso con Licencia</h2>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-4">
+                  <KeyRound className="w-8 h-8 text-cyan-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Acceso Manual</h2>
+                <p className="text-slate-400 text-sm mt-1">Ingrese su licencia de acceso</p>
+              </div>
               
               <form onSubmit={handleManualLogin} className="space-y-4">
                 <Input
                   type="text"
-                  placeholder="Licencia (ej: ADM-123456789)"
+                  placeholder="Licencia (ej: DOC-123456789)"
                   value={license}
                   onChange={(e) => setLicense(e.target.value)}
-                  className="h-12"
+                  className="h-14 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-xl text-center font-mono text-lg"
                 />
                 
                 {error && (
-                  <p className="text-red-600 text-sm text-center">{error}</p>
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-center">
+                    <p className="text-sm text-red-400">{error}</p>
+                  </div>
                 )}
                 
-                <Button type="submit" className="w-full h-12" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25" 
+                  disabled={loading}
+                >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Iniciar Sesión'}
                 </Button>
               </form>
               
-              <Button variant="ghost" onClick={retry} className="w-full mt-4">
+              <Button 
+                variant="ghost" 
+                onClick={retry} 
+                className="w-full mt-4 text-slate-400 hover:text-white"
+              >
                 ← Volver a Face ID
               </Button>
             </div>
@@ -586,9 +628,14 @@ export default function LoginV2Page() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-gray-400 text-xs mt-4">
-          {registeredUsers.length} usuarios registrados en el sistema
-        </p>
+        <div className="text-center mt-6">
+          <p className="text-slate-500 text-xs">
+            <span className="text-cyan-400">{registeredUsers.length}</span> usuarios registrados
+          </p>
+          <p className="text-slate-600 text-xs mt-1">
+            Powered by SASSC Biometric Engine
+          </p>
+        </div>
       </div>
     </div>
   );

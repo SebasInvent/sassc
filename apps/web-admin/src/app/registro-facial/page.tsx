@@ -8,14 +8,17 @@ import {
   XCircle, 
   Loader2,
   RefreshCw,
-  UserPlus,
   ArrowLeft,
   Shield,
   User,
   Briefcase,
   BadgeCheck,
   Sparkles,
-  Stethoscope
+  Stethoscope,
+  Scan,
+  Fingerprint,
+  Activity,
+  Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,20 +34,20 @@ type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'procesando' | 
 
 // 5 capturas con instrucciones de ángulo para mejor cobertura
 const CAPTURE_ANGLES = [
-  { id: 1, instruction: 'Mire al frente', icon: '😐', description: 'Mantenga la cabeza recta' },
-  { id: 2, instruction: 'Gire levemente a la izquierda', icon: '👈', description: 'Solo un poco' },
-  { id: 3, instruction: 'Gire levemente a la derecha', icon: '👉', description: 'Solo un poco' },
-  { id: 4, instruction: 'Incline hacia arriba', icon: '👆', description: 'Levante la barbilla' },
-  { id: 5, instruction: 'Mire al frente nuevamente', icon: '😊', description: 'Última captura' },
+  { id: 1, instruction: 'Mire al frente', description: 'Mantenga la cabeza recta', angle: 0 },
+  { id: 2, instruction: 'Gire a la izquierda', description: 'Levemente', angle: -15 },
+  { id: 3, instruction: 'Gire a la derecha', description: 'Levemente', angle: 15 },
+  { id: 4, instruction: 'Incline hacia arriba', description: 'Levante la barbilla', angle: 0 },
+  { id: 5, instruction: 'Posición final', description: 'Última captura', angle: 0 },
 ];
 
 const ROLES = [
-  { value: 'SUPER_ADMIN', label: 'Super Admin', icon: Shield, color: 'bg-purple-600' },
-  { value: 'ADMIN', label: 'Administrador', icon: Briefcase, color: 'bg-red-600' },
-  { value: 'DOCTOR', label: 'Doctor', icon: Stethoscope, color: 'bg-blue-600' },
-  { value: 'NURSE', label: 'Enfermero(a)', icon: User, color: 'bg-green-600' },
-  { value: 'PHARMACIST', label: 'Farmacéutico', icon: Sparkles, color: 'bg-orange-600' },
-  { value: 'RECEPTIONIST', label: 'Recepcionista', icon: BadgeCheck, color: 'bg-cyan-600' },
+  { value: 'DOCTOR', label: 'Médico', icon: Stethoscope },
+  { value: 'NURSE', label: 'Enfermero/a', icon: Heart },
+  { value: 'ADMIN', label: 'Admin', icon: Shield },
+  { value: 'PHARMACIST', label: 'Farmacia', icon: Activity },
+  { value: 'RECEPTIONIST', label: 'Recepción', icon: User },
+  { value: 'SUPER_ADMIN', label: 'Super Admin', icon: Fingerprint },
 ];
 
 export default function RegistroFacialPage() {
@@ -283,44 +286,59 @@ export default function RegistroFacialPage() {
   const selectedRole = ROLES.find(r => r.value === formData.role);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 overflow-hidden relative">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-full blur-3xl" />
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+      </div>
+
       <canvas ref={canvasRef} className="hidden" />
       
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-3">
-            <UserPlus className="w-8 h-8 text-white" />
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 mb-4 shadow-lg shadow-cyan-500/25">
+            <Scan className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">SASSC</h1>
-          <p className="text-gray-500 text-sm">Registro de Usuario</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">SASSC</h1>
+          <p className="text-cyan-400/80 text-sm font-medium mt-1">Biometric Identity System</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-700/50 overflow-hidden shadow-2xl">
           
           {/* Estado: Formulario */}
           {estado === 'formulario' && (
             <form onSubmit={handleFormSubmit} className="p-6 space-y-5">
+              {/* Header */}
+              <div className="text-center pb-2">
+                <h2 className="text-xl font-semibold text-white">Nuevo Registro</h2>
+                <p className="text-slate-400 text-sm mt-1">Complete sus datos para continuar</p>
+              </div>
+
               {/* Nombre y Apellido */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Nombre</label>
                   <Input
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                     placeholder="Juan"
-                    className="h-11"
+                    className="h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-xl"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Apellido</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Apellido</label>
                   <Input
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                     placeholder="Pérez"
-                    className="h-11"
+                    className="h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-xl"
                     required
                   />
                 </div>
@@ -328,7 +346,7 @@ export default function RegistroFacialPage() {
 
               {/* Selector de Rol */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                <label className="block text-xs font-medium text-slate-400 mb-3 uppercase tracking-wider">Rol Profesional</label>
                 <div className="grid grid-cols-3 gap-2">
                   {ROLES.map((role) => {
                     const Icon = role.icon;
@@ -338,16 +356,14 @@ export default function RegistroFacialPage() {
                         key={role.value}
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, role: role.value }))}
-                        className={`p-2.5 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                        className={`p-3 rounded-xl border transition-all duration-200 flex flex-col items-center gap-2 ${
                           isSelected
-                            ? `border-blue-600 bg-blue-50`
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                            ? 'border-cyan-500 bg-cyan-500/10 shadow-lg shadow-cyan-500/10'
+                            : 'border-slate-700 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
                         }`}
                       >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? role.color : 'bg-gray-100'}`}>
-                          <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-gray-500'}`} />
-                        </div>
-                        <span className={`text-xs font-medium ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}>
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        <span className={`text-xs font-medium ${isSelected ? 'text-cyan-400' : 'text-slate-400'}`}>
                           {role.label}
                         </span>
                       </button>
@@ -358,40 +374,35 @@ export default function RegistroFacialPage() {
 
               {/* Especialidad */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Especialidad (opcional)</label>
+                <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Especialidad</label>
                 <Input
                   value={formData.specialty}
                   onChange={(e) => setFormData(prev => ({ ...prev, specialty: e.target.value }))}
                   placeholder="Medicina General, Cardiología..."
-                  className="h-11"
+                  className="h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-xl"
                 />
               </div>
 
-              {/* Info */}
-              <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2">
-                <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-blue-700">
-                  Se generará una licencia única al completar el registro facial.
-                </p>
-              </div>
-
               {errorMsg && (
-                <div className="bg-red-50 rounded-xl p-3 flex items-center gap-2">
-                  <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                  <p className="text-sm text-red-700">{errorMsg}</p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  <p className="text-sm text-red-400">{errorMsg}</p>
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700">
-                <Camera className="w-5 h-5 mr-2" />
-                Continuar con Captura Facial
+              <Button 
+                type="submit" 
+                className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 transition-all duration-200"
+              >
+                <Scan className="w-5 h-5 mr-2" />
+                Iniciar Escaneo Facial
               </Button>
 
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => router.push('/login')}
-                className="w-full text-gray-500"
+                className="w-full text-slate-400 hover:text-white hover:bg-slate-800/50"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver al Login
@@ -401,104 +412,130 @@ export default function RegistroFacialPage() {
 
           {/* Estado: Cargando Modelos */}
           {estado === 'cargando_modelos' && (
-            <div className="p-8 text-center">
-              <div className="relative w-20 h-20 mx-auto mb-4">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
-                <div 
-                  className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-gray-900">{progress}%</span>
+            <div className="p-10 text-center">
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                {/* Outer ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-slate-700" />
+                {/* Spinning ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+                {/* Inner glow */}
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center">
+                  <Fingerprint className="w-8 h-8 text-cyan-400 animate-pulse" />
                 </div>
               </div>
-              <p className="text-gray-900 font-medium">Preparando sistema</p>
-              <p className="text-gray-500 text-sm mt-1">Cargando modelos de IA...</p>
+              <p className="text-white font-semibold text-lg">Inicializando IA</p>
+              <p className="text-slate-400 text-sm mt-2">Cargando modelos biométricos...</p>
+              <div className="mt-4 h-1 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-cyan-400 text-xs mt-2 font-mono">{progress}%</p>
             </div>
           )}
 
           {/* Estado: Capturando */}
           {estado === 'capturando' && (
-            <div className="p-6 space-y-4">
+            <div className="p-5 space-y-4">
               {/* Instrucción de ángulo actual */}
               {capturedImages.length < 5 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-                  <div className="text-2xl mb-1">{CAPTURE_ANGLES[capturedImages.length]?.icon}</div>
-                  <p className="font-semibold text-blue-900">{CAPTURE_ANGLES[capturedImages.length]?.instruction}</p>
-                  <p className="text-xs text-blue-600">{CAPTURE_ANGLES[capturedImages.length]?.description}</p>
+                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-cyan-400 text-xs font-medium uppercase tracking-wider">
+                      Paso {capturedImages.length + 1} de 5
+                    </span>
+                  </div>
+                  <p className="font-semibold text-white text-lg">{CAPTURE_ANGLES[capturedImages.length]?.instruction}</p>
+                  <p className="text-slate-400 text-sm">{CAPTURE_ANGLES[capturedImages.length]?.description}</p>
                 </div>
               )}
 
-              {/* Progress - ahora 5 capturas */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Captura {capturedImages.length + 1} de 5</span>
-                <div className="flex gap-1">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className={`w-6 h-1.5 rounded-full ${
-                        i < capturedImages.length 
-                          ? 'bg-green-500' 
-                          : i === capturedImages.length 
-                            ? 'bg-blue-500' 
-                            : 'bg-gray-200'
-                      }`}
-                    />
-                  ))}
-                </div>
+              {/* Progress dots */}
+              <div className="flex justify-center gap-2">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      i < capturedImages.length 
+                        ? 'bg-cyan-400 shadow-lg shadow-cyan-400/50' 
+                        : i === capturedImages.length 
+                          ? 'bg-cyan-500 animate-pulse' 
+                          : 'bg-slate-700'
+                    }`}
+                  />
+                ))}
               </div>
 
-              {/* Video */}
-              <div className="relative rounded-2xl overflow-hidden bg-gray-900 aspect-[4/3]">
+              {/* Video Container */}
+              <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-[4/3]">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
                   className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(-1)' }} // Solo visual
+                  style={{ transform: 'scaleX(-1)' }}
                 />
                 
-                {/* Marco facial */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className={`w-40 h-52 rounded-full border-4 transition-all duration-300 ${
-                    faceDetected 
-                      ? 'border-green-500 shadow-lg shadow-green-500/30' 
-                      : 'border-white/50'
-                  }`} />
+                {/* Scanning overlay */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {/* Corner brackets */}
+                  <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-cyan-400/60 rounded-tl-lg" />
+                  <div className="absolute top-4 right-4 w-12 h-12 border-r-2 border-t-2 border-cyan-400/60 rounded-tr-lg" />
+                  <div className="absolute bottom-4 left-4 w-12 h-12 border-l-2 border-b-2 border-cyan-400/60 rounded-bl-lg" />
+                  <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-cyan-400/60 rounded-br-lg" />
+                  
+                  {/* Face oval guide */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className={`w-44 h-56 rounded-[50%] border-2 transition-all duration-500 ${
+                      faceDetected 
+                        ? 'border-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.3)]' 
+                        : 'border-slate-500/50'
+                    }`}>
+                      {/* Scanning line animation */}
+                      {faceDetected && (
+                        <div className="absolute inset-0 overflow-hidden rounded-[50%]">
+                          <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scan" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   
                   {/* Countdown */}
                   {faceDetected && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-                        <span className="text-3xl font-bold text-white">{countdown}</span>
+                      <div className="w-20 h-20 rounded-full bg-slate-900/80 backdrop-blur-sm border border-cyan-500/50 flex items-center justify-center">
+                        <span className="text-4xl font-bold text-cyan-400 font-mono">{countdown}</span>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Status */}
-                <div className="absolute bottom-3 left-3 right-3">
-                  <div className={`rounded-xl px-4 py-2.5 flex items-center gap-2 ${
+                {/* Status bar */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900/90 to-transparent">
+                  <div className={`rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 ${
                     faceDetected 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-amber-500 text-white'
+                      ? 'bg-cyan-500/20 border border-cyan-500/30' 
+                      : 'bg-slate-800/80 border border-slate-700'
                   }`}>
                     {faceDetected ? (
                       <>
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="text-sm font-medium">Rostro detectado - Capturando en {countdown}...</span>
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        <span className="text-sm font-medium text-cyan-400">Rostro detectado</span>
                       </>
                     ) : (
                       <>
-                        <Camera className="w-4 h-4" />
-                        <span className="text-sm font-medium">Posicione su rostro en el círculo</span>
+                        <Scan className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm font-medium text-slate-400">Buscando rostro...</span>
                       </>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Miniaturas */}
+              {/* Captured thumbnails */}
               {capturedImages.length > 0 && (
                 <div className="flex justify-center gap-2">
                   {capturedImages.map((img, i) => (
@@ -506,55 +543,53 @@ export default function RegistroFacialPage() {
                       <img 
                         src={img} 
                         alt={`Captura ${i + 1}`} 
-                        className="w-14 h-14 rounded-xl object-cover border-2 border-green-500"
+                        className="w-12 h-12 rounded-lg object-cover border-2 border-cyan-500/50"
                         style={{ transform: 'scaleX(-1)' }}
                       />
-                      <CheckCircle className="absolute -top-1 -right-1 w-4 h-4 text-green-500 bg-white rounded-full" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 flex items-center justify-center">
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
-
-              <Button 
-                onClick={captureImage} 
-                disabled={!faceDetected}
-                variant="outline"
-                className="w-full h-11"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Capturar Manualmente
-              </Button>
             </div>
           )}
 
           {/* Estado: Procesando */}
           {estado === 'procesando' && (
-            <div className="p-8 text-center">
-              <Loader2 className="w-12 h-12 mx-auto text-blue-600 animate-spin mb-4" />
-              <p className="text-gray-900 font-medium">Procesando registro</p>
-              <p className="text-gray-500 text-sm mt-1">Guardando datos biométricos...</p>
+            <div className="p-10 text-center">
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 animate-ping" />
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-500 animate-spin" />
+                <div className="absolute inset-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center">
+                  <Fingerprint className="w-8 h-8 text-cyan-400" />
+                </div>
+              </div>
+              <p className="text-white font-semibold text-lg">Procesando Biometría</p>
+              <p className="text-slate-400 text-sm mt-2">Encriptando datos faciales...</p>
             </div>
           )}
 
           {/* Estado: Éxito */}
           {estado === 'exito' && (
             <div className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center mb-6">
+                <CheckCircle className="w-10 h-10 text-cyan-400" />
               </div>
               
-              <h2 className="text-xl font-bold text-gray-900 mb-1">¡Registro Exitoso!</h2>
-              <p className="text-gray-500 mb-4">
+              <h2 className="text-2xl font-bold text-white mb-2">Registro Exitoso</h2>
+              <p className="text-slate-400 mb-6">
                 Bienvenido, {formData.firstName} {formData.lastName}
               </p>
 
               {generatedLicense && (
-                <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                  <p className="text-gray-500 text-sm mb-1">Su licencia de acceso</p>
-                  <p className="text-2xl font-mono font-bold text-gray-900">
+                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
+                  <p className="text-slate-400 text-xs uppercase tracking-wider mb-2">Licencia de Acceso</p>
+                  <p className="text-2xl font-mono font-bold text-cyan-400 tracking-wider">
                     {generatedLicense}
                   </p>
-                  <p className="text-gray-400 text-xs mt-2">
+                  <p className="text-slate-500 text-xs mt-3">
                     Guarde esta licencia para acceso manual
                   </p>
                 </div>
@@ -562,9 +597,9 @@ export default function RegistroFacialPage() {
 
               <Button 
                 onClick={() => router.push('/login')}
-                className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+                className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25"
               >
-                Ir al Login
+                Continuar al Login
               </Button>
             </div>
           )}
@@ -572,14 +607,17 @@ export default function RegistroFacialPage() {
           {/* Estado: Error */}
           {estado === 'error' && (
             <div className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4">
-                <XCircle className="w-8 h-8 text-red-600" />
+              <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6">
+                <XCircle className="w-10 h-10 text-red-400" />
               </div>
               
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Error</h2>
-              <p className="text-gray-500 mb-4">{errorMsg}</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Error</h2>
+              <p className="text-slate-400 mb-6">{errorMsg}</p>
 
-              <Button onClick={retry} className="w-full h-11">
+              <Button 
+                onClick={retry} 
+                className="w-full h-14 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700"
+              >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reintentar
               </Button>
@@ -588,10 +626,27 @@ export default function RegistroFacialPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-gray-400 text-xs mt-4">
-          Software Anticorrupción Sistema Salud Colombiano
-        </p>
+        <div className="text-center mt-6">
+          <p className="text-slate-500 text-xs">
+            Powered by <span className="text-cyan-400">SASSC</span> Biometric Engine
+          </p>
+          <p className="text-slate-600 text-xs mt-1">
+            Sistema de Salud Colombiano
+          </p>
+        </div>
       </div>
+
+      {/* CSS for scan animation */}
+      <style jsx>{`
+        @keyframes scan {
+          0% { top: 0; }
+          50% { top: 100%; }
+          100% { top: 0; }
+        }
+        .animate-scan {
+          animation: scan 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
