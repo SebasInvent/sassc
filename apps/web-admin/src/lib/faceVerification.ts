@@ -19,22 +19,24 @@ import { euclideanDistance, stringToDescriptor } from './faceRecognition';
 const SECURITY_CONFIG = {
   // Umbral de distancia máxima para reconocer (más bajo = más estricto)
   // Típico: misma persona 0.1-0.3, diferentes personas 0.6+
-  MAX_DISTANCE_THRESHOLD: 0.45,
+  // Aumentado a 0.55 para mejor tolerancia a ángulos
+  MAX_DISTANCE_THRESHOLD: 0.55,
   
   // Diferencia mínima con el segundo mejor match (evita confusiones)
-  MIN_DIFFERENCE_WITH_SECOND: 0.15,
+  MIN_DIFFERENCE_WITH_SECOND: 0.12,
   
-  // Número de capturas para promediar
-  CAPTURES_FOR_VERIFICATION: 3,
+  // Número de capturas para promediar (aumentado de 3 a 5 para mejor cobertura)
+  CAPTURES_FOR_VERIFICATION: 5,
   
   // Confianza mínima requerida (0-100)
-  MIN_CONFIDENCE_SCORE: 75,
+  MIN_CONFIDENCE_SCORE: 70,
   
   // Tiempo máximo para completar verificación (ms)
-  MAX_VERIFICATION_TIME: 15000,
+  MAX_VERIFICATION_TIME: 20000,
   
   // Variación máxima permitida entre capturas (consistencia)
-  MAX_CAPTURE_VARIANCE: 0.2,
+  // Aumentado para tolerar más variación de ángulos
+  MAX_CAPTURE_VARIANCE: 0.25,
 };
 
 export interface VerificationResult {

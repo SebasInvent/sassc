@@ -29,6 +29,15 @@ import { API_URL } from '@/lib/api';
 
 type Estado = 'formulario' | 'cargando_modelos' | 'capturando' | 'procesando' | 'exito' | 'error';
 
+// 5 capturas con instrucciones de ángulo para mejor cobertura
+const CAPTURE_ANGLES = [
+  { id: 1, instruction: 'Mire al frente', icon: '😐', description: 'Mantenga la cabeza recta' },
+  { id: 2, instruction: 'Gire levemente a la izquierda', icon: '👈', description: 'Solo un poco' },
+  { id: 3, instruction: 'Gire levemente a la derecha', icon: '👉', description: 'Solo un poco' },
+  { id: 4, instruction: 'Incline hacia arriba', icon: '👆', description: 'Levante la barbilla' },
+  { id: 5, instruction: 'Mire al frente nuevamente', icon: '😊', description: 'Última captura' },
+];
+
 const ROLES = [
   { value: 'SUPER_ADMIN', label: 'Super Admin', icon: Shield, color: 'bg-purple-600' },
   { value: 'ADMIN', label: 'Administrador', icon: Briefcase, color: 'bg-red-600' },
@@ -160,7 +169,8 @@ export default function RegistroFacialPage() {
   useEffect(() => {
     let countdownTimer: NodeJS.Timeout | null = null;
     
-    if (faceDetected && estado === 'capturando' && capturedImages.length < 3) {
+    // Ahora capturamos 5 imágenes en lugar de 3
+    if (faceDetected && estado === 'capturando' && capturedImages.length < 5) {
       countdownTimer = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
@@ -210,16 +220,22 @@ export default function RegistroFacialPage() {
       setCapturedImages(newImages);
       setCapturedDescriptors(newDescriptors);
       
-      if (newImages.length >= 3) {
-        // Promediar descriptores
+      // Ahora necesitamos 5 capturas para mejor cobertura de ángulos
+      if (newImages.length >= 5) {
+        // Promediar los 5 descriptores para un embedding más robusto
         const avgDescriptor = new Float32Array(128);
         for (let i = 0; i < 128; i++) {
-          avgDescriptor[i] = (newDescriptors[0][i] + newDescriptors[1][i] + newDescriptors[2][i]) / 3;
+          let sum = 0;
+          for (let j = 0; j < newDescriptors.length; j++) {
+            sum += newDescriptors[j][i];
+          }
+          avgDescriptor[i] = sum / newDescriptors.length;
         }
         
         const descriptorStr = descriptorToString(avgDescriptor);
         cleanup();
-        await saveRegistration(descriptorStr, imageBase64);
+        // Usar la imagen del frente (primera o última) para AWS backup
+        await saveRegistration(descriptorStr, newImages[0]);
       }
     }
   };
@@ -403,14 +419,23 @@ export default function RegistroFacialPage() {
           {/* Estado: Capturando */}
           {estado === 'capturando' && (
             <div className="p-6 space-y-4">
-              {/* Progress */}
+              {/* Instrucción de ángulo actual */}
+              {capturedImages.length < 5 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                  <div className="text-2xl mb-1">{CAPTURE_ANGLES[capturedImages.length]?.icon}</div>
+                  <p className="font-semibold text-blue-900">{CAPTURE_ANGLES[capturedImages.length]?.instruction}</p>
+                  <p className="text-xs text-blue-600">{CAPTURE_ANGLES[capturedImages.length]?.description}</p>
+                </div>
+              )}
+
+              {/* Progress - ahora 5 capturas */}
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Captura {capturedImages.length + 1} de 3</span>
+                <span className="text-sm text-gray-600">Captura {capturedImages.length + 1} de 5</span>
                 <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
+                  {[0, 1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className={`w-8 h-1.5 rounded-full ${
+                      className={`w-6 h-1.5 rounded-full ${
                         i < capturedImages.length 
                           ? 'bg-green-500' 
                           : i === capturedImages.length 
