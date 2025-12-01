@@ -950,6 +950,114 @@ curl -X POST https://backend-production-4923.up.railway.app/auth/clear-all-faces
 
 ---
 
+# 12. BIOMETRIC V2 - INSIGHTFACE + MEDIAPIPE
+
+## 12.1 Resumen
+
+La versión 2 del sistema biométrico reemplaza:
+- ❌ Google Cloud Vision → ✅ Mediapipe FaceMesh (liveness)
+- ❌ Face-API.js (128D) → ✅ InsightFace ArcFace (512D)
+- ✅ AWS Rekognition se mantiene como backup
+
+## 12.2 Arquitectura
+
+```
+Frontend                          Backend
+┌─────────────────┐              ┌─────────────────┐
+│ Mediapipe       │              │ Liveness        │
+│ FaceMesh        │──────────────│ Service         │
+│ (Liveness)      │              │                 │
+├─────────────────┤              ├─────────────────┤
+│ Anti-Spoof      │              │ AntiSpoof       │
+│ (Texture/Freq)  │──────────────│ Service         │
+├─────────────────┤              ├─────────────────┤
+│ InsightFace     │              │ InsightFace     │
+│ ArcFace 512D    │──────────────│ Service         │
+│ (ONNX Runtime)  │              │                 │
+└─────────────────┘              ├─────────────────┤
+                                 │ Cascade         │
+                                 │ Service         │
+                                 ├─────────────────┤
+                                 │ AWS Rekognition │
+                                 │ (Backup)        │
+                                 └─────────────────┘
+```
+
+## 12.3 Archivos Principales
+
+### Backend
+- `src/biometrics/v2/insightface.service.ts` - Embeddings 512D
+- `src/biometrics/v2/liveness.service.ts` - Validación liveness
+- `src/biometrics/v2/antispoof.service.ts` - Anti-spoofing
+- `src/biometrics/v2/cascade.service.ts` - Orquestador
+- `src/biometrics/v2/biometric.controller.ts` - Endpoints
+
+### Frontend
+- `src/lib/biometrics/mediapipe.ts` - FaceMesh
+- `src/lib/biometrics/insightface.ts` - ArcFace ONNX
+- `src/lib/biometrics/antispoof.ts` - Análisis de textura
+- `src/lib/biometrics/cascade.ts` - Orquestador
+- `src/components/biometrics/FaceEnrollment.tsx` - UI registro
+- `src/components/biometrics/FaceLogin.tsx` - UI login
+
+## 12.4 Endpoints V2
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/biometrics/enroll` | POST | Registrar usuario con 512D |
+| `/biometrics/verify` | POST | Verificación completa |
+| `/biometrics/quick-verify` | POST | Verificación rápida |
+| `/biometrics/liveness` | POST | Validar liveness |
+| `/biometrics/embedding` | POST | Comparar embeddings |
+| `/biometrics/registered` | GET | Usuarios V2 registrados |
+| `/biometrics/thresholds` | GET | Umbrales actuales |
+
+## 12.5 Thresholds
+
+| Check | Umbral | Acción |
+|-------|--------|--------|
+| Liveness | >= 60 | Pass |
+| Anti-Spoof | <= 40 | Pass |
+| ArcFace Distance | < 0.45 | Match directo |
+| ArcFace Distance | 0.45-0.55 | AWS backup |
+| AWS Similarity | >= 90% | Match confirmado |
+
+## 12.6 Campos DB (Practitioner)
+
+```prisma
+embedding512       String?   // 512 floats JSON
+embeddingQuality   Float?    // 0-1
+embeddingVersion   String?   // "v2"
+livenessScore      Float?    // 0-100
+spoofScore         Float?    // 0-100
+lastVerificationAt DateTime?
+verificationCount  Int       @default(0)
+```
+
+## 12.7 Dependencias
+
+```bash
+# Frontend
+pnpm add @mediapipe/tasks-vision onnxruntime-web
+
+# Backend
+pnpm add @aws-sdk/client-rekognition
+```
+
+## 12.8 Setup
+
+```bash
+# Desde raíz del proyecto
+.\scripts\setup-biometrics-v2.ps1
+
+# O manualmente:
+cd apps/web-admin && pnpm add @mediapipe/tasks-vision onnxruntime-web
+cd apps/backend && pnpm add @aws-sdk/client-rekognition
+cd apps/backend && npx prisma db push && npx prisma generate
+```
+
+---
+
 **Fin del documento**
 
-*Generado para entrenamiento de IA - SASSC v1.0*
+*Generado para entrenamiento de IA - SASSC v2.0*
