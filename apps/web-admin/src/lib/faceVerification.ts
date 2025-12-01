@@ -15,28 +15,28 @@
 import * as faceapi from 'face-api.js';
 import { euclideanDistance, stringToDescriptor } from './faceRecognition';
 
-// Configuración de seguridad - AJUSTAR CON CUIDADO
-const SECURITY_CONFIG = {
-  // Umbral de distancia máxima para reconocer (más bajo = más estricto)
-  // Típico: misma persona 0.1-0.3, diferentes personas 0.6+
-  // Aumentado a 0.55 para mejor tolerancia a ángulos
-  MAX_DISTANCE_THRESHOLD: 0.55,
+// Configuración de seguridad - AJUSTADA PARA MAYOR TOLERANCIA
+export const SECURITY_CONFIG = {
+  // Umbral de distancia máxima para reconocer (más alto = más tolerante)
+  // Típico: misma persona 0.1-0.4, diferentes personas 0.6+
+  // Aumentado a 0.6 para mejor tolerancia a ángulos y condiciones de luz
+  MAX_DISTANCE_THRESHOLD: 0.6,
   
   // Diferencia mínima con el segundo mejor match (evita confusiones)
-  MIN_DIFFERENCE_WITH_SECOND: 0.12,
+  MIN_DIFFERENCE_WITH_SECOND: 0.08,
   
-  // Número de capturas para promediar (aumentado de 3 a 5 para mejor cobertura)
-  CAPTURES_FOR_VERIFICATION: 5,
+  // Número de capturas para promediar
+  CAPTURES_FOR_VERIFICATION: 3, // Reducido a 3 para velocidad
   
-  // Confianza mínima requerida (0-100)
-  MIN_CONFIDENCE_SCORE: 70,
+  // Confianza mínima requerida (0-100) - REDUCIDA
+  MIN_CONFIDENCE_SCORE: 50,
   
   // Tiempo máximo para completar verificación (ms)
-  MAX_VERIFICATION_TIME: 20000,
+  MAX_VERIFICATION_TIME: 15000,
   
   // Variación máxima permitida entre capturas (consistencia)
-  // Aumentado para tolerar más variación de ángulos
-  MAX_CAPTURE_VARIANCE: 0.25,
+  // Aumentado para tolerar más variación
+  MAX_CAPTURE_VARIANCE: 0.35,
 };
 
 export interface VerificationResult {
@@ -379,4 +379,3 @@ export async function quickVerify(
   return { user: null, confidence: calculateConfidence(best.distance), distance: best.distance };
 }
 
-export { SECURITY_CONFIG };

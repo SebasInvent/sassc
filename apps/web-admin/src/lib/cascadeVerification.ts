@@ -19,26 +19,26 @@ import {
   type RegisteredUser 
 } from './faceVerification';
 
-// Configuración
+// Configuración - AJUSTADA PARA MAYOR TOLERANCIA
 const CASCADE_CONFIG = {
   // Tiempo máximo total (ms)
-  MAX_TOTAL_TIME: 1500,
+  MAX_TOTAL_TIME: 2000,
   
   // Timeouts individuales
-  GOOGLE_TIMEOUT: 600,
-  AWS_TIMEOUT: 700,
-  LOCAL_TIMEOUT: 800,
+  GOOGLE_TIMEOUT: 800,
+  AWS_TIMEOUT: 900,
+  LOCAL_TIMEOUT: 1000,
   
-  // Peso de cada verificación
-  GOOGLE_WEIGHT: 0.25,  // Anti-spoofing
-  AWS_WEIGHT: 0.45,     // Comparación precisa
-  LOCAL_WEIGHT: 0.30,   // Verificación rápida
+  // Peso de cada verificación - Local tiene más peso ahora
+  GOOGLE_WEIGHT: 0.20,  // Anti-spoofing
+  AWS_WEIGHT: 0.35,     // Comparación precisa
+  LOCAL_WEIGHT: 0.45,   // Verificación rápida - MÁS PESO
   
-  // Mínimo para aprobar
-  MIN_COMBINED_SCORE: 70,
+  // Mínimo para aprobar - REDUCIDO
+  MIN_COMBINED_SCORE: 55,
   
   // Mínimo de proveedores que deben aprobar
-  MIN_PROVIDERS_PASS: 2,
+  MIN_PROVIDERS_PASS: 1, // Solo 1 proveedor si tiene buena confianza
 };
 
 export interface CascadeResult {
@@ -213,22 +213,25 @@ function analyzeResults(
   let combinedScore = 0;
   let totalWeight = 0;
   
-  // Google Vision (anti-spoofing)
-  if (google.success && google.faceDetected && google.antiSpoofing.isRealFace) {
-    providersPass++;
+  // Google Vision (anti-spoofing) - más tolerante
+  if (google.success && google.faceDetected) {
+    // Aprobar si detectó rostro, aunque liveness sea bajo
+    if (google.antiSpoofing.livenessScore >= 30) {
+      providersPass++;
+    }
     combinedScore += google.confidence * CASCADE_CONFIG.GOOGLE_WEIGHT;
     totalWeight += CASCADE_CONFIG.GOOGLE_WEIGHT;
   }
   
-  // AWS Rekognition (comparación)
-  if (aws.success && aws.matched && aws.confidence >= 80) {
+  // AWS Rekognition (comparación) - umbral reducido
+  if (aws.success && aws.matched && aws.confidence >= 70) {
     providersPass++;
     combinedScore += aws.confidence * CASCADE_CONFIG.AWS_WEIGHT;
     totalWeight += CASCADE_CONFIG.AWS_WEIGHT;
   }
   
-  // Local Face-API
-  if (local.success && local.confidence >= 70) {
+  // Local Face-API - umbral reducido para ser más tolerante
+  if (local.success && local.confidence >= 55) {
     providersPass++;
     combinedScore += local.confidence * CASCADE_CONFIG.LOCAL_WEIGHT;
     totalWeight += CASCADE_CONFIG.LOCAL_WEIGHT;
@@ -249,20 +252,22 @@ function analyzeResults(
     matchedUser = users.find(u => u.id === local.user!.id) || null;
   }
   
-  // Anti-spoofing combinado
-  // Confiar si AWS O Local confirman con alta confianza
-  const awsConfirmsIdentity = aws.success && aws.matched && aws.confidence >= 90;
-  const localConfirmsIdentity = local.success && local.confidence >= 90;
+  // Anti-spoofing combinado - MÁS TOLERANTE
+  // Confiar si AWS O Local confirman con confianza razonable
+  const awsConfirmsIdentity = aws.success && aws.matched && aws.confidence >= 70;
+  const localConfirmsIdentity = local.success && local.confidence >= 60;
   const highConfidenceMatch = awsConfirmsIdentity || localConfirmsIdentity;
   
-  const googleLiveness = google.success ? google.antiSpoofing.livenessScore : 0;
+  const googleLiveness = google.success ? google.antiSpoofing.livenessScore : 50; // Default 50 si no hay Google
   
   // Considerar rostro real si:
-  // 1. Google dice que es real (liveness > 70), O
-  // 2. AWS o Local confirman identidad con >90% Y Google detectó un rostro (liveness > 40)
+  // 1. Google dice que es real (liveness > 50), O
+  // 2. AWS o Local confirman identidad con confianza razonable, O
+  // 3. Local tiene alta confianza (>70%) - confiar en face-api.js
   const isRealFace = 
-    (google.success && google.antiSpoofing.isRealFace) ||
-    (highConfidenceMatch && googleLiveness >= 40);
+    (google.success && google.antiSpoofing.livenessScore >= 50) ||
+    highConfidenceMatch ||
+    (local.success && local.confidence >= 70);
   
   const antiSpoofing = {
     isRealFace,
@@ -270,8 +275,8 @@ function analyzeResults(
   };
   
   // Determinar éxito final
-  // Si AWS o Local confirman con alta confianza, solo necesitamos 1 proveedor
-  const minProviders = highConfidenceMatch ? 1 : CASCADE_CONFIG.MIN_PROVIDERS_PASS;
+  // Si Local confirma con buena confianza, solo necesitamos 1 proveedor
+  const minProviders = (localConfirmsIdentity || awsConfirmsIdentity) ? 1 : CASCADE_CONFIG.MIN_PROVIDERS_PASS;
   
   const success = 
     providersPass >= minProviders &&
