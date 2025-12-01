@@ -103,23 +103,11 @@ export async function verifyCascade(
     return createFailResult('Error capturando imagen', 0);
   }
   
-  // Detectar si es iOS Safari (cámara frontal puede estar espejada)
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  
-  if (isIOS) {
-    // En iOS, des-espejar la imagen para que coincida con el registro
-    ctx.translate(videoWidth, 0);
-    ctx.scale(-1, 1);
-  }
-  
+  // Capturar imagen directamente sin transformaciones
+  // La imagen se guarda tal cual viene de la cámara
   ctx.drawImage(videoElement, 0, 0);
   
-  // Restaurar transformación
-  if (isIOS) {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-  
-  const imageBase64 = canvas.toDataURL('image/jpeg', 0.92); // Mayor calidad para iOS
+  const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
   
   onProgress?.('Verificando con Google Vision...', 15);
   
