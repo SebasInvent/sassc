@@ -91,23 +91,25 @@ export async function verifyCascade(
   
   onProgress?.('Iniciando verificación multi-proveedor...', 0);
   
-  // Capturar imagen del video
+  // Capturar imagen del video - limitar tamaño para móviles (igual que registro)
   const canvas = document.createElement('canvas');
+  const maxSize = 480;
   const videoWidth = videoElement.videoWidth || 640;
   const videoHeight = videoElement.videoHeight || 480;
-  canvas.width = videoWidth;
-  canvas.height = videoHeight;
+  const scale = Math.min(maxSize / videoWidth, maxSize / videoHeight, 1);
+  
+  canvas.width = Math.round(videoWidth * scale);
+  canvas.height = Math.round(videoHeight * scale);
   const ctx = canvas.getContext('2d');
   
   if (!ctx) {
     return createFailResult('Error capturando imagen', 0);
   }
   
-  // Capturar imagen directamente sin transformaciones
-  // La imagen se guarda tal cual viene de la cámara
-  ctx.drawImage(videoElement, 0, 0);
+  // Capturar imagen directamente sin transformaciones (igual que registro)
+  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
   
-  const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
+  const imageBase64 = canvas.toDataURL('image/jpeg', 0.7); // Misma compresión que registro
   
   onProgress?.('Verificando con Google Vision...', 15);
   
