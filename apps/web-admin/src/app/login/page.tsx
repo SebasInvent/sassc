@@ -254,9 +254,14 @@ export default function LoginV2Page() {
             
             if (comparisons.length > 0) {
               const best = comparisons[0];
-              console.log(`🔍 Match: ${best.user.name} (${best.distance.toFixed(4)})`);
+              const second = comparisons[1];
+              const diffWithSecond = second ? second.distance - best.distance : 1;
               
-              if (best.distance < 0.55) {
+              console.log(`🔍 Match: ${best.user.name} (dist: ${best.distance.toFixed(4)}, diff: ${diffWithSecond.toFixed(4)})`);
+              
+              // UMBRAL ESTRICTO: distancia < 0.45 Y diferencia con segundo > 0.08
+              // Esto asegura que solo se reconozca si hay una coincidencia MUY clara
+              if (best.distance < 0.45 && diffWithSecond > 0.08) {
                 clearInterval(interval);
                 setRecognizedUser(best.user);
                 setStep('recognized');
@@ -326,21 +331,28 @@ export default function LoginV2Page() {
       }
       
       const best = comparisons[0];
+      const second = comparisons[1];
+      const diffWithSecond = second ? second.distance - best.distance : 1;
       
-      if (best.distance < 0.65) {
+      console.log(`🔐 Verificación manual:`);
+      console.log(`   Mejor: ${best.user.name} (dist: ${best.distance.toFixed(4)})`);
+      console.log(`   Diferencia con segundo: ${diffWithSecond.toFixed(4)}`);
+      
+      // UMBRAL ESTRICTO para verificación manual:
+      // - Distancia < 0.50 (muy similar)
+      // - Diferencia con segundo > 0.05 (claramente distinguible)
+      if (best.distance < 0.50 && diffWithSecond > 0.05) {
         stopCamera();
         setRecognizedUser(best.user);
         setStep('recognized');
         speakOnce('success', `Bienvenido, ${best.user.name.split(' ')[0]}`);
         setTimeout(() => doLogin(best.user.license), 2000);
-      } else if (best.distance < 0.75) {
+      } else {
+        // NO HAY COINCIDENCIA CLARA - Denegar acceso
         stopCamera();
         setStep('not_registered');
         speakOnce('notRegistered');
-      } else {
-        stopCamera();
-        setStep('verification_failed');
-        speakOnce('error');
+        console.log(`❌ Acceso denegado: distancia=${best.distance.toFixed(4)}, diff=${diffWithSecond.toFixed(4)}`);
       }
       
     } catch (err: any) {
