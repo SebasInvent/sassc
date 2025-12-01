@@ -99,28 +99,19 @@ export class BiometricV2Controller {
       const licenseNumber = Math.floor(100000000 + Math.random() * 900000000);
       const license = `${licensePrefix}-${licenseNumber}`;
 
-      // Create practitioner
+      // Create practitioner with biometric data
+      // Note: Using faceDescriptor field for V2 embeddings (512D stored as JSON)
+      // The new fields (embedding512, embeddingQuality, etc.) require DB migration
       const practitioner = await this.prisma.practitioner.create({
         data: {
           license,
           firstName: body.firstName,
           lastName: body.lastName,
           specialty: body.specialty || body.role,
-          embedding512: body.embedding512,
-          embeddingQuality: body.embeddingQuality,
-          embeddingVersion: 'v2',
+          // Store 512D embedding in faceDescriptor field (JSON string)
+          faceDescriptor: body.embedding512,
           faceImage: body.faceImage,
           faceRegisteredAt: new Date(),
-          livenessScore: body.livenessScore,
-          spoofScore: body.spoofScore,
-        },
-      });
-
-      // Create user with role
-      const user = await this.prisma.user.create({
-        data: {
-          role: body.role as any,
-          practitionerId: practitioner.id,
         },
       });
 
@@ -171,16 +162,16 @@ export class BiometricV2Controller {
       }
 
       // Get registered users with V2 embeddings
+      // Use faceDescriptor field for V2 embeddings (stored as JSON string)
       const practitioners = await this.prisma.practitioner.findMany({
         where: {
-          embedding512: { not: null },
-          embeddingVersion: 'v2',
+          faceDescriptor: { not: null },
         },
         select: {
           id: true,
           firstName: true,
           lastName: true,
-          embedding512: true,
+          faceDescriptor: true,
           faceImage: true,
         },
       });
@@ -188,7 +179,7 @@ export class BiometricV2Controller {
       const registeredUsers: RegisteredUser[] = practitioners.map(p => ({
         id: p.id,
         name: `${p.firstName} ${p.lastName}`,
-        embedding512: p.embedding512!,
+        embedding512: p.faceDescriptor!,
         faceImage: p.faceImage || undefined,
       }));
 
@@ -211,15 +202,13 @@ export class BiometricV2Controller {
 
       const result = await this.cascadeService.verify(input);
 
-      // Update verification metadata if successful
+      // Update verification timestamp if successful
+      // Note: New fields (lastVerificationAt, verificationCount, etc.) require DB migration
       if (result.success && result.matchedUser) {
         await this.prisma.practitioner.update({
           where: { id: result.matchedUser.id },
           data: {
-            lastVerificationAt: new Date(),
-            verificationCount: { increment: 1 },
-            livenessScore: result.livenessScore,
-            spoofScore: result.spoofScore,
+            faceRegisteredAt: new Date(), // Use existing field as last verification
           },
         });
       }
@@ -265,24 +254,23 @@ export class BiometricV2Controller {
     try {
       const embedding = JSON.parse(body.embedding512);
 
-      // Get registered users
+      // Get registered users (using faceDescriptor for V2 embeddings)
       const practitioners = await this.prisma.practitioner.findMany({
         where: {
-          embedding512: { not: null },
-          embeddingVersion: 'v2',
+          faceDescriptor: { not: null },
         },
         select: {
           id: true,
           firstName: true,
           lastName: true,
-          embedding512: true,
+          faceDescriptor: true,
         },
       });
 
       const registeredUsers = practitioners.map(p => ({
         id: p.id,
         name: `${p.firstName} ${p.lastName}`,
-        embedding512: p.embedding512!,
+        embedding512: p.faceDescriptor!,
       }));
 
       const result = await this.cascadeService.quickVerify(
@@ -355,10 +343,10 @@ export class BiometricV2Controller {
    */
   @Get('registered')
   async getRegisteredUsers() {
+    // Use faceDescriptor for V2 embeddings (until DB migration)
     const practitioners = await this.prisma.practitioner.findMany({
       where: {
-        embedding512: { not: null },
-        embeddingVersion: 'v2',
+        faceDescriptor: { not: null },
       },
       select: {
         id: true,
@@ -366,10 +354,7 @@ export class BiometricV2Controller {
         lastName: true,
         license: true,
         specialty: true,
-        embeddingQuality: true,
         faceRegisteredAt: true,
-        lastVerificationAt: true,
-        verificationCount: true,
       },
     });
 
@@ -380,10 +365,7 @@ export class BiometricV2Controller {
         name: `${p.firstName} ${p.lastName}`,
         license: p.license,
         specialty: p.specialty,
-        quality: p.embeddingQuality,
         registeredAt: p.faceRegisteredAt,
-        lastVerification: p.lastVerificationAt,
-        verificationCount: p.verificationCount,
       })),
     };
   }
