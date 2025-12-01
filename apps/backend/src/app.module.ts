@@ -28,6 +28,8 @@ import { RipsModule } from './rips/rips.module';
 import { MipresModule } from './mipres/mipres.module';
 import { ConsentimientoModule } from './consentimiento/consentimiento.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
+// Biometric V2 - InsightFace + Mediapipe
+import { BiometricV2Module } from './biometrics/v2/biometric.module';
 
 @Module({
   imports: [
@@ -58,6 +60,8 @@ import { FacturacionModule } from './facturacion/facturacion.module';
     MipresModule,
     ConsentimientoModule,
     FacturacionModule,
+    // Biometric V2
+    BiometricV2Module,
   ],
   controllers: [AppController],
   providers: [AppService],
