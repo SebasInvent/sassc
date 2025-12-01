@@ -15,28 +15,29 @@
 import * as faceapi from 'face-api.js';
 import { euclideanDistance, stringToDescriptor } from './faceRecognition';
 
-// Configuración de seguridad - AJUSTADA PARA MAYOR TOLERANCIA
+// Configuración de seguridad - MUY TOLERANTE PARA PRUEBAS
 export const SECURITY_CONFIG = {
   // Umbral de distancia máxima para reconocer (más alto = más tolerante)
-  // Típico: misma persona 0.1-0.4, diferentes personas 0.6+
-  // Aumentado a 0.6 para mejor tolerancia a ángulos y condiciones de luz
-  MAX_DISTANCE_THRESHOLD: 0.6,
+  // Típico: misma persona 0.1-0.5, diferentes personas 0.7+
+  // Aumentado a 0.65 para mejor tolerancia a ángulos, luz y expresiones
+  MAX_DISTANCE_THRESHOLD: 0.65,
   
   // Diferencia mínima con el segundo mejor match (evita confusiones)
-  MIN_DIFFERENCE_WITH_SECOND: 0.08,
+  // Reducido para ser más tolerante
+  MIN_DIFFERENCE_WITH_SECOND: 0.05,
   
   // Número de capturas para promediar
-  CAPTURES_FOR_VERIFICATION: 3, // Reducido a 3 para velocidad
+  CAPTURES_FOR_VERIFICATION: 3,
   
-  // Confianza mínima requerida (0-100) - REDUCIDA
-  MIN_CONFIDENCE_SCORE: 50,
+  // Confianza mínima requerida (0-100) - MUY REDUCIDA
+  MIN_CONFIDENCE_SCORE: 40,
   
   // Tiempo máximo para completar verificación (ms)
   MAX_VERIFICATION_TIME: 15000,
   
   // Variación máxima permitida entre capturas (consistencia)
-  // Aumentado para tolerar más variación
-  MAX_CAPTURE_VARIANCE: 0.35,
+  // Muy tolerante para diferentes ángulos
+  MAX_CAPTURE_VARIANCE: 0.45,
 };
 
 export interface VerificationResult {
@@ -169,9 +170,12 @@ export async function verifyFaceWithMultipleCaptures(
   }
   
   // 2. Verificar diferencia significativa con segundo mejor (evitar confusiones)
+  // PERO: Si el mejor y segundo son la MISMA PERSONA (mismo nombre), no es ambiguo
   if (second) {
     const difference = second.distance - best.distance;
-    if (difference < SECURITY_CONFIG.MIN_DIFFERENCE_WITH_SECOND) {
+    const samePersonMultipleRegistrations = best.user.name.toLowerCase() === second.user.name.toLowerCase();
+    
+    if (difference < SECURITY_CONFIG.MIN_DIFFERENCE_WITH_SECOND && !samePersonMultipleRegistrations) {
       console.log(`❌ RECHAZADO: Diferencia con segundo ${difference.toFixed(4)} < mínimo ${SECURITY_CONFIG.MIN_DIFFERENCE_WITH_SECOND}`);
       console.log(`   Mejor: ${best.user.name} (${best.distance.toFixed(4)})`);
       console.log(`   Segundo: ${second.user.name} (${second.distance.toFixed(4)})`);
@@ -189,6 +193,10 @@ export async function verifyFaceWithMultipleCaptures(
           livenessScore: 100,
         }
       };
+    }
+    
+    if (samePersonMultipleRegistrations) {
+      console.log(`ℹ️ Mismo usuario con múltiples registros detectado: ${best.user.name}`);
     }
   }
   
