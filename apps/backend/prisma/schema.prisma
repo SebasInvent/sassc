@@ -208,21 +208,10 @@ model Practitioner {
   lastName        String
   specialty       String
   
-  // Biometric V2 - InsightFace ArcFace 512D
-  embedding512       String?   // JSON array of 512 floats (ArcFace embedding)
-  embeddingQuality   Float?    // 0-1, quality of the embedding
-  embeddingVersion   String?   // v1, v2, etc.
-  
-  // Legacy fields (kept for backward compatibility)
-  faceDescriptor     String?   // JSON array of face descriptor (128D, deprecated)
+  // Biometric data (V1 uses 128D, V2 uses 512D - both stored as JSON in faceDescriptor)
+  faceDescriptor     String?   // JSON array of face descriptor
   faceImage          String?   // Base64 encoded face image (backup for AWS)
   faceRegisteredAt   DateTime? // When face was registered
-  
-  // Biometric verification metadata
-  livenessScore      Float?    // 0-100, last liveness score
-  spoofScore         Float?    // 0-100, last anti-spoof score
-  lastVerificationAt DateTime? // Last successful verification
-  verificationCount  Int       @default(0) // Total successful verifications
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
