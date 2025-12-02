@@ -195,6 +195,12 @@ model Patient {
   remisiones    Remision[]
   user User?
   
+  // Relaciones v2.0 - Sistema Anticorrupción
+  biometricSessions   BiometricSession[]
+  biometricData       BiometricData[]
+  fingerprintData     FingerprintData[]
+  insightEmbeddings   InsightFaceEmbedding[]
+  
   @@index([capAsignadoId])
   @@index([regimen])
   @@index([city])
@@ -657,6 +663,9 @@ model CAP {
   adresRegionalId String?
   adresRegional   ADRESRegional? @relation(fields: [adresRegionalId], references: [id])
   
+  // Relaciones v2.0 - Terminales/Kioskos
+  terminals       Terminal[]
+  
   @@index([ciudad])
   @@index([departamento])
   @@index([activo])
@@ -764,6 +773,9 @@ model IPS {
   // ADRES Regional al que pertenece
   adresRegionalId String?
   adresRegional   ADRESRegional?  @relation(fields: [adresRegionalId], references: [id])
+  
+  // Relaciones v2.0 - Terminales/Kioskos
+  terminals       Terminal[]
   
   @@index([ciudad])
   @@index([departamento])
@@ -1250,4 +1262,406 @@ model Glosa {
   
   @@index([facturaId])
   @@index([estado])
+}
+
+// ============================================
+// SASSC v2.0 - SISTEMA ANTICORRUPCIÓN
+// ============================================
+
+// --- ENUMS v2 ---
+
+enum BiometricType {
+  FACE_128D        // face-api.js (web-admin)
+  FACE_512D        // InsightFace (kiosko)
+  FINGERPRINT      // Huella dactilar
+  CEDULA_PHOTO     // Foto de cédula
+  CEDULA_CHIP      // Datos del chip NFC
+}
+
+enum SessionStatus {
+  INITIATED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  FRAUD_DETECTED
+  CANCELLED
+}
+
+enum FraudType {
+  IDENTITY_SPOOFING       // Suplantación de identidad
+  CEDULA_TAMPERING        // Cédula adulterada
+  DUPLICATE_REGISTRATION  // Registro duplicado
+  FACE_CEDULA_MISMATCH    // Rostro no coincide con cédula
+  FINGERPRINT_MISMATCH    // Huella no coincide
+  DEEPFAKE_DETECTED       // Deepfake detectado
+  LIVENESS_FAILED         // Fallo de liveness
+  PHANTOM_SERVICE         // Servicio fantasma
+  MULTIPLE_IDENTITIES     // Múltiples identidades
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TerminalType {
+  KIOSK_CAP           // Kiosko en CAP
+  KIOSK_IPS           // Kiosko en IPS
+  KIOSK_LAB           // Kiosko en laboratorio
+  KIOSK_PHARMACY      // Kiosko en farmacia
+  KIOSK_IMAGING       // Kiosko en imágenes
+  MOBILE_STAFF        // Dispositivo móvil personal
+  WEB_ADMIN           // Panel web administrativo
+}
+
+enum RoutingDestination {
+  TRIAGE
+  CONSULTATION
+  LABORATORY
+  PHARMACY
+  IMAGING
+  EMERGENCY
+  AUDIT_OFFICE
+  DOCUMENT_WINDOW
+  WAITING_ROOM
+  SPECIALIST
+}
+
+enum FingerType {
+  RIGHT_THUMB
+  RIGHT_INDEX
+  RIGHT_MIDDLE
+  RIGHT_RING
+  RIGHT_LITTLE
+  LEFT_THUMB
+  LEFT_INDEX
+  LEFT_MIDDLE
+  LEFT_RING
+  LEFT_LITTLE
+}
+
+// --- TERMINAL / KIOSKO ---
+
+model Terminal {
+  id              String        @id @default(cuid())
+  code            String        @unique  // Ej: "KIOSK-CAP-001"
+  name            String
+  type            TerminalType
+  
+  // Ubicación
+  location        String        // Descripción legible
+  latitude        Float?
+  longitude       Float?
+  
+  // Configuración
+  isActive        Boolean       @default(true)
+  deviceToken     String        @unique  // Token único del dispositivo
+  lastHeartbeat   DateTime?
+  
+  // Relaciones con IPS/CAP
+  ipsId           String?
+  ips             IPS?          @relation(fields: [ipsId], references: [id])
+  capId           String?
+  cap             CAP?          @relation(fields: [capId], references: [id])
+  
+  // Sesiones
+  sessions        BiometricSession[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([type])
+  @@index([isActive])
+  @@index([ipsId])
+  @@index([capId])
+}
+
+// --- SESIÓN BIOMÉTRICA ---
+
+model BiometricSession {
+  id              String          @id @default(cuid())
+  sessionCode     String          @unique  // UUID para tracking
+  status          SessionStatus   @default(INITIATED)
+  
+  // Terminal
+  terminalId      String
+  terminal        Terminal        @relation(fields: [terminalId], references: [id])
+  
+  // Paciente (puede ser null hasta identificación)
+  patientId       String?
+  patient         Patient?        @relation(fields: [patientId], references: [id])
+  
+  // Datos capturados del formulario
+  capturedData    Json?
+  
+  // Scores de verificación
+  faceMatchScore      Float?      // 0-1
+  livenessScore       Float?      // 0-1
+  fingerprintScore    Float?      // 0-1
+  cedulaMatchScore    Float?      // 0-1
+  overallRiskScore    Float?      // 0-1 (mayor = más riesgo)
+  
+  // Resultado de routing
+  routingDecision     RoutingDestination?
+  routingReason       String?
+  
+  // Timestamps
+  startedAt       DateTime        @default(now())
+  completedAt     DateTime?
+  
+  // Relaciones
+  biometricData   BiometricData[]
+  cedulaScans     CedulaScan[]
+  fraudAlerts     FraudAlert[]
+  auditEvents     BiometricAuditEvent[]
+  
+  @@index([status])
+  @@index([terminalId])
+  @@index([patientId])
+  @@index([startedAt])
+}
+
+// --- DATOS BIOMÉTRICOS ---
+
+model BiometricData {
+  id              String          @id @default(cuid())
+  type            BiometricType
+  
+  // Sesión
+  sessionId       String
+  session         BiometricSession @relation(fields: [sessionId], references: [id])
+  
+  // Paciente
+  patientId       String?
+  patient         Patient?        @relation(fields: [patientId], references: [id])
+  
+  // Datos
+  descriptor      String?         @db.Text // JSON del descriptor (128D o 512D)
+  templateHash    String?         // SHA256 del template (huella)
+  imageHash       String?         // SHA256 de la imagen
+  encryptedData   String?         @db.Text // Datos cifrados AES-256
+  
+  // Metadatos
+  quality         Float?          // Calidad de captura 0-1
+  confidence      Float?          // Confianza del modelo 0-1
+  metadata        Json?           // Datos adicionales
+  
+  // Validación
+  isVerified      Boolean         @default(false)
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([type])
+  @@index([sessionId])
+  @@index([patientId])
+  @@index([templateHash])
+}
+
+// --- ESCANEO DE CÉDULA ---
+
+model CedulaScan {
+  id              String          @id @default(cuid())
+  
+  // Sesión
+  sessionId       String
+  session         BiometricSession @relation(fields: [sessionId], references: [id])
+  
+  // Datos extraídos
+  documentNumber  String
+  firstName       String?
+  lastName        String?
+  birthDate       DateTime?
+  gender          String?
+  bloodType       String?
+  expeditionDate  DateTime?
+  expirationDate  DateTime?
+  expeditionPlace String?
+  
+  // Datos técnicos
+  mrzData         String?         @db.Text // Machine Readable Zone
+  chipData        Json?           // Datos del chip NFC
+  qrData          String?         @db.Text // Datos del QR
+  photoHash       String?         // Hash de la foto extraída
+  
+  // Validación
+  isValid         Boolean         @default(false)
+  validationErrors Json?
+  
+  // Match con rostro capturado
+  faceMatchScore  Float?
+  faceMatchResult String?         // MATCH, NO_MATCH, INCONCLUSIVE
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([documentNumber])
+  @@index([sessionId])
+}
+
+// --- DATOS DE HUELLA DACTILAR ---
+
+model FingerprintData {
+  id              String          @id @default(cuid())
+  
+  // Sesión
+  sessionId       String?
+  
+  // Paciente
+  patientId       String?
+  patient         Patient?        @relation(fields: [patientId], references: [id])
+  
+  // Template
+  finger          FingerType
+  templateISO     String          @db.Text // ISO 19794-2 template (cifrado)
+  templateHash    String          // SHA256 para búsqueda rápida
+  quality         Int             // 0-100
+  
+  // Validación
+  isVerified      Boolean         @default(false)
+  
+  createdAt       DateTime        @default(now())
+  
+  @@unique([patientId, finger])
+  @@index([templateHash])
+  @@index([sessionId])
+}
+
+// --- EMBEDDING INSIGHTFACE 512D ---
+
+model InsightFaceEmbedding {
+  id              String          @id @default(cuid())
+  
+  // Paciente
+  patientId       String
+  patient         Patient         @relation(fields: [patientId], references: [id])
+  
+  // Embedding 512D
+  embedding       String          @db.Text // JSON array Float32[512]
+  embeddingHash   String          // Hash para indexación
+  
+  // Metadatos
+  captureAngle    String?         // FRONTAL, LEFT, RIGHT, UP, DOWN
+  quality         Float           // 0-1
+  livenessScore   Float?          // 0-1
+  imageHash       String?
+  
+  // Estado
+  isActive        Boolean         @default(true)
+  isPrimary       Boolean         @default(false)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([patientId])
+  @@index([embeddingHash])
+  @@index([isActive, isPrimary])
+}
+
+// --- ALERTAS DE FRAUDE ---
+
+model FraudAlert {
+  id              String          @id @default(cuid())
+  
+  // Sesión que generó la alerta
+  sessionId       String
+  session         BiometricSession @relation(fields: [sessionId], references: [id])
+  
+  // Tipo y severidad
+  type            FraudType
+  severity        AlertSeverity
+  
+  // Detalles
+  description     String          @db.Text
+  evidence        Json?
+  scores          Json?
+  
+  // Estado
+  isResolved      Boolean         @default(false)
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  resolution      String?         @db.Text
+  
+  // Acciones tomadas
+  actionsTaken    Json?
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([type])
+  @@index([severity])
+  @@index([isResolved])
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+// --- EVENTOS DE AUDITORÍA BIOMÉTRICA ---
+
+model BiometricAuditEvent {
+  id              String          @id @default(cuid())
+  
+  // Contexto
+  sessionId       String?
+  session         BiometricSession? @relation(fields: [sessionId], references: [id])
+  terminalId      String?
+  userId          String?
+  patientId       String?
+  
+  // Evento
+  action          String          // REGISTER, VERIFY, MATCH, ALERT, etc.
+  resource        String          // Recurso afectado
+  outcome         String          // SUCCESS, FAILURE, ERROR
+  
+  // Detalles
+  details         Json?
+  ipAddress       String?
+  userAgent       String?
+  
+  // Geolocalización
+  latitude        Float?
+  longitude       Float?
+  
+  // Firma digital (inmutabilidad tipo blockchain)
+  eventHash       String          // Hash del evento
+  previousHash    String?         // Hash del evento anterior
+  signature       String?         // Firma digital
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([action])
+  @@index([sessionId])
+  @@index([terminalId])
+  @@index([createdAt])
+}
+
+// --- REGLAS ANTICORRUPCIÓN ---
+
+model AnticorruptionRule {
+  id              String          @id @default(cuid())
+  
+  // Identificación
+  code            String          @unique  // Ej: "RULE-001"
+  name            String
+  description     String          @db.Text
+  
+  // Configuración
+  isActive        Boolean         @default(true)
+  priority        Int             @default(50)  // 1-100
+  
+  // Condiciones (JSON con reglas)
+  conditions      Json            // { field, operator, value }[]
+  
+  // Acciones
+  actionOnMatch   String          // ALERT, BLOCK, REDIRECT, LOG
+  severity        AlertSeverity
+  destination     RoutingDestination?
+  
+  // Metadatos
+  createdBy       String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([isActive])
+  @@index([priority])
 }
