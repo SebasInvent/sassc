@@ -277,9 +277,33 @@ export default function RegistroFacialPage() {
       setCapturedImages(newImages);
       setCapturedDescriptors(newDescriptors);
       
-      // Ahora necesitamos 5 capturas para mejor cobertura de ángulos
+      console.log(`📸 Captura ${newImages.length}/5 completada`);
+      
+      // Necesitamos 5 capturas para mejor cobertura
       if (newImages.length >= 5) {
-        // Promediar los 5 descriptores para un embedding más robusto
+        // ESTRATEGIA: Usar el descriptor de la captura frontal (primera)
+        // como base, pero validar consistencia con las demás
+        
+        // Calcular distancias entre todos los descriptores para validar consistencia
+        const distances: number[] = [];
+        for (let i = 0; i < newDescriptors.length; i++) {
+          for (let j = i + 1; j < newDescriptors.length; j++) {
+            let sum = 0;
+            for (let k = 0; k < 128; k++) {
+              sum += Math.pow(newDescriptors[i][k] - newDescriptors[j][k], 2);
+            }
+            distances.push(Math.sqrt(sum));
+          }
+        }
+        
+        const avgInternalDistance = distances.reduce((a, b) => a + b, 0) / distances.length;
+        console.log(`📊 Consistencia interna: ${avgInternalDistance.toFixed(4)} (menor es mejor)`);
+        
+        // Usar el descriptor FRONTAL (primera captura) - es el más confiable para matching
+        // El promedio puede diluir características distintivas
+        const bestDescriptor = newDescriptors[0];
+        
+        // También calcular promedio como backup
         const avgDescriptor = new Float32Array(128);
         for (let i = 0; i < 128; i++) {
           let sum = 0;
@@ -289,9 +313,12 @@ export default function RegistroFacialPage() {
           avgDescriptor[i] = sum / newDescriptors.length;
         }
         
-        const descriptorStr = descriptorToString(avgDescriptor);
+        // Usar el descriptor frontal si la consistencia es buena, sino el promedio
+        const finalDescriptor = avgInternalDistance < 0.4 ? bestDescriptor : avgDescriptor;
+        console.log(`✅ Usando descriptor: ${avgInternalDistance < 0.4 ? 'FRONTAL' : 'PROMEDIO'}`);
+        
+        const descriptorStr = descriptorToString(finalDescriptor);
         cleanup();
-        // Usar la imagen del frente (primera o última) para AWS backup
         await saveRegistration(descriptorStr, newImages[0]);
       }
     }

@@ -259,9 +259,14 @@ export default function LoginV2Page() {
               
               console.log(`🔍 Match: ${best.user.name} (dist: ${best.distance.toFixed(4)}, diff: ${diffWithSecond.toFixed(4)})`);
               
-              // UMBRAL ESTRICTO: distancia < 0.45 Y diferencia con segundo > 0.08
-              // Esto asegura que solo se reconozca si hay una coincidencia MUY clara
-              if (best.distance < 0.45 && diffWithSecond > 0.08) {
+              // UMBRAL BALANCEADO para auto-detección:
+              // - Distancia < 0.52 (similar pero no tan estricto)
+              // - Diferencia con segundo > 0.06 (claramente distinguible)
+              // - Si solo hay 1 usuario, solo verificar distancia
+              const isOnlyUser = comparisons.length === 1;
+              const isValidMatch = best.distance < 0.52 && (isOnlyUser || diffWithSecond > 0.06);
+              
+              if (isValidMatch) {
                 clearInterval(interval);
                 setRecognizedUser(best.user);
                 setStep('recognized');
@@ -333,26 +338,54 @@ export default function LoginV2Page() {
       const best = comparisons[0];
       const second = comparisons[1];
       const diffWithSecond = second ? second.distance - best.distance : 1;
+      const isOnlyUser = comparisons.length === 1;
       
       console.log(`🔐 Verificación manual:`);
       console.log(`   Mejor: ${best.user.name} (dist: ${best.distance.toFixed(4)})`);
-      console.log(`   Diferencia con segundo: ${diffWithSecond.toFixed(4)}`);
+      console.log(`   Segundo: ${second?.user.name || 'N/A'} (dist: ${second?.distance.toFixed(4) || 'N/A'})`);
+      console.log(`   Diferencia: ${diffWithSecond.toFixed(4)}`);
+      console.log(`   Usuarios en sistema: ${comparisons.length}`);
       
-      // UMBRAL ESTRICTO para verificación manual:
-      // - Distancia < 0.50 (muy similar)
-      // - Diferencia con segundo > 0.05 (claramente distinguible)
-      if (best.distance < 0.50 && diffWithSecond > 0.05) {
+      // SISTEMA DE VERIFICACIÓN INTELIGENTE:
+      // Nivel 1: Match perfecto (distancia muy baja)
+      // Nivel 2: Match bueno con diferencia clara del segundo
+      // Nivel 3: Único usuario en sistema (solo verificar distancia)
+      
+      const THRESHOLD_PERFECT = 0.48;  // Match muy bueno
+      const THRESHOLD_GOOD = 0.55;     // Match aceptable
+      const MIN_DIFF = 0.05;           // Diferencia mínima con segundo
+      
+      let isValidMatch = false;
+      let matchLevel = '';
+      
+      if (best.distance < THRESHOLD_PERFECT) {
+        // Match perfecto - alta confianza
+        isValidMatch = true;
+        matchLevel = 'PERFECTO';
+      } else if (best.distance < THRESHOLD_GOOD && (isOnlyUser || diffWithSecond > MIN_DIFF)) {
+        // Match bueno con diferencia clara O único usuario
+        isValidMatch = true;
+        matchLevel = isOnlyUser ? 'UNICO_USUARIO' : 'BUENO';
+      } else if (best.distance >= 0.60) {
+        // Distancia muy alta - definitivamente no es la persona
+        isValidMatch = false;
+        matchLevel = 'NO_MATCH';
+      }
+      
+      console.log(`   Resultado: ${matchLevel} (valid: ${isValidMatch})`);
+      
+      if (isValidMatch) {
         stopCamera();
         setRecognizedUser(best.user);
         setStep('recognized');
         speakOnce('success', `Bienvenido, ${best.user.name.split(' ')[0]}`);
         setTimeout(() => doLogin(best.user.license), 2000);
       } else {
-        // NO HAY COINCIDENCIA CLARA - Denegar acceso
+        // NO HAY COINCIDENCIA - Denegar acceso
         stopCamera();
         setStep('not_registered');
         speakOnce('notRegistered');
-        console.log(`❌ Acceso denegado: distancia=${best.distance.toFixed(4)}, diff=${diffWithSecond.toFixed(4)}`);
+        console.log(`❌ Acceso denegado: ${matchLevel}`);
       }
       
     } catch (err: any) {
