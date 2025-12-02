@@ -28,8 +28,8 @@ import { RipsModule } from './rips/rips.module';
 import { MipresModule } from './mipres/mipres.module';
 import { ConsentimientoModule } from './consentimiento/consentimiento.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
-// Biometric V2 - InsightFace + Mediapipe
-import { BiometricV2Module } from './biometrics/v2/biometric.module';
+// Biometric V2 - Sistema Anticorrupcion SASSC
+import { BiometricV2Module } from './biometrics/v2/biometric-v2.module';
 
 @Module({
   imports: [
