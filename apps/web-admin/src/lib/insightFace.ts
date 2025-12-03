@@ -5,20 +5,24 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos desde HuggingFace (InventAgency) o local
-const USE_CDN = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+// Configuración - modelos desde backend proxy o local
+const IS_LOCALHOST = typeof window !== 'undefined' && window.location.hostname.includes('localhost');
 
-// CDN: Tu repositorio en HuggingFace (usando cdn-lfs para archivos grandes)
-const CDN_BASE = 'https://cdn-lfs.hf.co/repos/f5/a5/f5a5e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8';
+// En producción: usar backend de Railway como proxy
+// En local: usar archivos locales
+const BACKEND_URL = IS_LOCALHOST 
+  ? 'http://localhost:3001' 
+  : 'https://backend-production-4923.up.railway.app';
+
 const LOCAL_PATH = '/models/insightface';
 
-// URLs directas de descarga desde HuggingFace
-const DETECTION_MODEL = USE_CDN 
-  ? 'https://huggingface.co/InventAgency/insightface-models/resolve/main/det_10g.onnx?download=true'
-  : `${LOCAL_PATH}/det_10g.onnx`;
-const RECOGNITION_MODEL = USE_CDN
-  ? 'https://huggingface.co/InventAgency/insightface-models/resolve/main/w600k_r50.onnx?download=true'
-  : `${LOCAL_PATH}/w600k_r50.onnx`;
+// URLs de los modelos
+const DETECTION_MODEL = IS_LOCALHOST 
+  ? `${LOCAL_PATH}/det_10g.onnx`
+  : `${BACKEND_URL}/models/insightface/det_10g.onnx`;
+const RECOGNITION_MODEL = IS_LOCALHOST
+  ? `${LOCAL_PATH}/w600k_r50.onnx`
+  : `${BACKEND_URL}/models/insightface/w600k_r50.onnx`;
 
 // Usar window para persistir entre HMR (Hot Module Reload)
 declare global {

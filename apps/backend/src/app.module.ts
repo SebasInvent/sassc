@@ -32,6 +32,8 @@ import { FacturacionModule } from './facturacion/facturacion.module';
 // import { BiometricV2Module } from './biometrics/v2/biometric-v2.module';
 // Lector de Cédula
 import { CedulaReaderModule } from './cedula-reader/cedula-reader.module';
+// Proxy para modelos ONNX
+import { ModelsProxyModule } from './models-proxy/models-proxy.module';
 
 @Module({
   imports: [
@@ -66,6 +68,8 @@ import { CedulaReaderModule } from './cedula-reader/cedula-reader.module';
     // BiometricV2Module,
     // Lector de Cédula
     CedulaReaderModule,
+    // Proxy para modelos ONNX (InsightFace)
+    ModelsProxyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
