@@ -5,20 +5,20 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos desde GitHub Releases (CORS habilitado)
+// Configuración - modelos desde Cloudflare R2 (CORS habilitado)
 const IS_LOCALHOST = typeof window !== 'undefined' && window.location.hostname.includes('localhost');
 
-// GitHub Releases URL (funciona con CORS)
-const GITHUB_RELEASES = 'https://github.com/SebasInvent/sassc/releases/download/v1.0.0-models';
+// Cloudflare R2 Bucket URL
+const R2_BUCKET = 'https://pub-9d169f7a228744c8b2828de2f4645bb5.r2.dev';
 const LOCAL_PATH = '/models/insightface';
 
 // URLs de los modelos
 const DETECTION_MODEL = IS_LOCALHOST 
   ? `${LOCAL_PATH}/det_10g.onnx`
-  : `${GITHUB_RELEASES}/det_10g.onnx`;
+  : `${R2_BUCKET}/det_10g.onnx`;
 const RECOGNITION_MODEL = IS_LOCALHOST
   ? `${LOCAL_PATH}/w600k_r50.onnx`
-  : `${GITHUB_RELEASES}/w600k_r50.onnx`;
+  : `${R2_BUCKET}/w600k_r50.onnx`;
 
 // Usar window para persistir entre HMR (Hot Module Reload)
 declare global {
