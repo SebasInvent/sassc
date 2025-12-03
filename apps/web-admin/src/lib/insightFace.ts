@@ -5,21 +5,20 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos desde rewrite proxy o local
+// Configuración - modelos desde GitHub Releases (CORS habilitado)
 const IS_LOCALHOST = typeof window !== 'undefined' && window.location.hostname.includes('localhost');
 
-// En local: usar archivos locales
-// En producción: usar rewrite proxy a HuggingFace (/hf-models/*)
+// GitHub Releases URL (funciona con CORS)
+const GITHUB_RELEASES = 'https://github.com/SebasInvent/sassc/releases/download/v1.0.0-models';
 const LOCAL_PATH = '/models/insightface';
-const PROXY_PATH = '/hf-models';
 
 // URLs de los modelos
 const DETECTION_MODEL = IS_LOCALHOST 
   ? `${LOCAL_PATH}/det_10g.onnx`
-  : `${PROXY_PATH}/det_10g.onnx`;
+  : `${GITHUB_RELEASES}/det_10g.onnx`;
 const RECOGNITION_MODEL = IS_LOCALHOST
   ? `${LOCAL_PATH}/w600k_r50.onnx`
-  : `${PROXY_PATH}/w600k_r50.onnx`;
+  : `${GITHUB_RELEASES}/w600k_r50.onnx`;
 
 // Usar window para persistir entre HMR (Hot Module Reload)
 declare global {
