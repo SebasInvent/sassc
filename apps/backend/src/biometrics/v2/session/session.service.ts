@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { SessionStatus, RoutingDestination } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export interface CreateSessionDto {
   terminalId: string;
@@ -32,7 +32,7 @@ export class SessionService {
    * Crea una nueva sesión biométrica
    */
   async create(dto: CreateSessionDto) {
-    const sessionCode = uuidv4();
+    const sessionCode = randomUUID();
     
     this.logger.log(`Creating biometric session ${sessionCode} for terminal ${dto.terminalId}`);
 
