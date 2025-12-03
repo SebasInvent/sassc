@@ -700,10 +700,8 @@ export default function RegistroPacienteV2Page() {
     );
   }
 
-  // Obtener color de la barra LED
+  // Obtener color de la barra LED basado en estado del rostro
   const getLedColor = () => {
-    if (step === 'success') return 'led-green';
-    if (step === 'error') return 'led-red';
     if (faceStatus === 'perfect') return 'led-green';
     if (faceStatus === 'no_face') return 'led-red';
     return 'led-white'; // Detectando/procesando
