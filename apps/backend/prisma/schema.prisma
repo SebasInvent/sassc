@@ -200,6 +200,7 @@ model Patient {
   biometricData       BiometricData[]
   fingerprintData     FingerprintData[]
   insightEmbeddings   InsightFaceEmbedding[]
+  patientBiometric    PatientBiometric?  // Biometría completa (facial 512D + vocal)
   
   @@index([capAsignadoId])
   @@index([regimen])
@@ -1664,4 +1665,43 @@ model AnticorruptionRule {
   
   @@index([isActive])
   @@index([priority])
+}
+
+// --- BIOMETRÍA COMPLETA DEL PACIENTE (v2.0 Futurista) ---
+
+model PatientBiometric {
+  id                String   @id @default(cuid())
+  patientId         String   @unique
+  patient           Patient  @relation(fields: [patientId], references: [id])
+  
+  // === FACIAL ===
+  // Primario: InsightFace 512D (alta precisión)
+  faceDescriptor512 String?  @db.Text
+  // Fallback: face-api.js 128D (navegador)
+  faceDescriptor128 String?  @db.Text
+  // Imágenes de las 5 capturas (URLs o Base64)
+  faceImage1        String?  @db.Text  // Frontal
+  faceImage2        String?  @db.Text  // Izquierda
+  faceImage3        String?  @db.Text  // Derecha
+  faceImage4        String?  @db.Text  // Arriba
+  faceImage5        String?  @db.Text  // Abajo
+  // Anti-spoofing
+  livenessScore     Float?
+  faceQuality       String?  @default("MEDIUM")  // LOW, MEDIUM, HIGH
+  
+  // === VOCAL ===
+  // Muestras de voz (Base64 audio)
+  voiceSample1      String?  @db.Text  // Frase con nombre
+  voiceSample2      String?  @db.Text  // Números 1-10
+  voiceSample3      String?  @db.Text  // Frase genérica
+  // Huella vocal (características extraídas)
+  voicePrint        Json?    // { pitch, frequency[], tempo, duration }
+  voiceQuality      String?  @default("MEDIUM")
+  
+  // === METADATA ===
+  registrationMethod String?  @default("VOICE")  // VOICE, MANUAL, HYBRID
+  registeredAt      DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([patientId])
 }
