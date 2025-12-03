@@ -129,10 +129,12 @@ export default function RegistroPacienteV2Page() {
   const [faceImages, setFaceImages] = useState<string[]>([]);
   const [faceDescriptors, setFaceDescriptors] = useState<Float32Array[]>([]);
   const [voiceSamples, setVoiceSamples] = useState<string[]>([]);
+  const [faceBox, setFaceBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -199,40 +201,112 @@ export default function RegistroPacienteV2Page() {
     if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
     
     detectionIntervalRef.current = setInterval(async () => {
-      if (!videoRef.current) return;
+      if (!videoRef.current || !overlayCanvasRef.current) return;
+      
+      const video = videoRef.current;
+      const overlay = overlayCanvasRef.current;
+      const ctx = overlay.getContext('2d');
+      if (!ctx) return;
+      
+      // Ajustar tamaño del canvas al video
+      overlay.width = video.clientWidth;
+      overlay.height = video.clientHeight;
+      
+      // Limpiar canvas
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
       
       try {
         const faceapi = await import('face-api.js');
         const detection = await faceapi.detectSingleFace(
-          videoRef.current,
+          video,
           new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
         ).withFaceLandmarks();
         
         if (detection) {
           const box = detection.detection.box;
-          const videoWidth = videoRef.current.videoWidth;
-          const videoHeight = videoRef.current.videoHeight;
+          const videoWidth = video.videoWidth;
+          const videoHeight = video.videoHeight;
           
+          // Escalar coordenadas al tamaño del elemento
+          const scaleX = overlay.width / videoWidth;
+          const scaleY = overlay.height / videoHeight;
+          
+          // Coordenadas escaladas (invertidas horizontalmente porque el video está espejado)
+          const scaledX = overlay.width - (box.x + box.width) * scaleX;
+          const scaledY = box.y * scaleY;
+          const scaledWidth = box.width * scaleX;
+          const scaledHeight = box.height * scaleY;
+          
+          // Guardar bounding box
+          setFaceBox({ x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight });
+          
+          // Calcular centro y radio del círculo
+          const centerX = scaledX + scaledWidth / 2;
+          const centerY = scaledY + scaledHeight / 2;
+          const radius = Math.max(scaledWidth, scaledHeight) * 0.7;
+          
+          // Determinar estado
           const faceSize = (box.width * box.height) / (videoWidth * videoHeight);
-          const faceCenterX = (box.x + box.width / 2) / videoWidth;
-          const faceCenterY = (box.y + box.height / 2) / videoHeight;
+          let currentStatus: FaceStatus = 'perfect';
+          let circleColor = '#22c55e'; // Verde
           
           if (faceSize < 0.03) {
-            setFaceStatus('too_far');
+            currentStatus = 'too_far';
+            circleColor = '#eab308'; // Amarillo
           } else if (faceSize > 0.25) {
-            setFaceStatus('too_close');
-          } else if (Math.abs(faceCenterX - 0.5) > 0.15 || Math.abs(faceCenterY - 0.45) > 0.15) {
-            setFaceStatus('off_center');
+            currentStatus = 'too_close';
+            circleColor = '#eab308';
           } else {
-            setFaceStatus('perfect');
+            currentStatus = 'perfect';
+            circleColor = '#22c55e';
           }
+          
+          setFaceStatus(currentStatus);
+          
+          // Dibujar círculo alrededor de la cara
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = circleColor;
+          ctx.lineWidth = 4;
+          ctx.shadowColor = circleColor;
+          ctx.shadowBlur = 20;
+          ctx.stroke();
+          
+          // Dibujar puntos de landmarks
+          const landmarks = detection.landmarks;
+          const positions = landmarks.positions;
+          
+          ctx.fillStyle = '#3b82f6'; // Azul
+          ctx.shadowColor = '#3b82f6';
+          ctx.shadowBlur = 10;
+          
+          // Dibujar algunos puntos clave (ojos, nariz, boca)
+          const keyPoints = [
+            positions[36], // Ojo izquierdo
+            positions[45], // Ojo derecho
+            positions[30], // Nariz
+            positions[48], // Boca izquierda
+            positions[54], // Boca derecha
+          ];
+          
+          keyPoints.forEach(point => {
+            if (point) {
+              const px = overlay.width - point.x * scaleX; // Invertir X
+              const py = point.y * scaleY;
+              ctx.beginPath();
+              ctx.arc(px, py, 4, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+          
         } else {
           setFaceStatus('no_face');
+          setFaceBox(null);
         }
       } catch (err) {
         console.error('Detection error:', err);
       }
-    }, 300);
+    }, 100); // Más frecuente para mejor tracking
   };
 
   // ============ FLUJO DE VOZ ============
@@ -750,18 +824,6 @@ export default function RegistroPacienteV2Page() {
           background: linear-gradient(90deg, #ffffff, #aaffff, #ffffff);
           color: #ffffff;
         }
-        .face-guide {
-          border: 3px solid rgba(255,255,255,0.6);
-          box-shadow: 0 0 20px rgba(255,255,255,0.3), inset 0 0 20px rgba(255,255,255,0.1);
-        }
-        .face-guide.perfect {
-          border-color: #22c55e;
-          box-shadow: 0 0 30px rgba(34,197,94,0.5), inset 0 0 30px rgba(34,197,94,0.2);
-        }
-        .face-guide.error {
-          border-color: #ef4444;
-          box-shadow: 0 0 30px rgba(239,68,68,0.5), inset 0 0 30px rgba(239,68,68,0.2);
-        }
       `}</style>
 
       {/* Video fullscreen - SIN overlay oscuro */}
@@ -774,6 +836,12 @@ export default function RegistroPacienteV2Page() {
         muted
       />
       <canvas ref={canvasRef} className="hidden" />
+      
+      {/* Canvas overlay para dibujar el círculo dinámico */}
+      <canvas 
+        ref={overlayCanvasRef} 
+        className="absolute inset-0 w-full h-full pointer-events-none z-20"
+      />
 
       {/* === BARRA LED SUPERIOR === */}
       <div className="absolute top-0 left-0 right-0 p-3 z-50">
@@ -807,26 +875,7 @@ export default function RegistroPacienteV2Page() {
         </p>
       </div>
 
-      {/* === GUÍA FACIAL CIRCULAR === */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-        <div 
-          className={`w-72 h-72 rounded-full face-guide transition-all duration-500 ${
-            faceStatus === 'perfect' ? 'perfect' : 
-            faceStatus === 'no_face' ? 'error' : ''
-          }`}
-        >
-          {/* Puntos de landmarks simulados */}
-          {faceStatus === 'perfect' && (
-            <>
-              <div className="absolute top-8 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full" />
-              <div className="absolute top-1/3 left-8 w-2 h-2 bg-blue-400 rounded-full" />
-              <div className="absolute top-1/3 right-8 w-2 h-2 bg-blue-400 rounded-full" />
-              <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full" />
-              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full" />
-            </>
-          )}
-        </div>
-      </div>
+      {/* El círculo facial ahora se dibuja dinámicamente en el canvas overlay */}
 
       {/* === PANEL INFERIOR === */}
       <div className="absolute bottom-0 left-0 right-0 z-40">
