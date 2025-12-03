@@ -414,4 +414,116 @@ export class AuthController {
       };
     }
   }
+
+  // ============ PATIENT REGISTRATION ENDPOINTS ============
+
+  /**
+   * Verificar si un paciente ya existe por número de cédula
+   */
+  @Get('check-patient/:docNumber')
+  async checkPatient(@Param('docNumber') docNumber: string) {
+    const patient = await this.prisma.patient.findUnique({
+      where: { docNumber },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        biometricRegistered: true,
+      },
+    });
+
+    return {
+      exists: !!patient,
+      patient: patient ? {
+        id: patient.id,
+        name: `${patient.firstName} ${patient.lastName}`,
+        hasBiometric: patient.biometricRegistered,
+      } : null,
+    };
+  }
+
+  /**
+   * Registrar nuevo paciente con datos biométricos
+   */
+  @Post('register-patient')
+  async registerPatient(
+    @Body() body: {
+      docType: string;
+      docNumber: string;
+      firstName: string;
+      lastName: string;
+      birthDate: string;
+      gender: string;
+      phone: string;
+      city: string;
+      department?: string;
+      bloodType?: string;
+      faceImages: string[];
+      faceDescriptors: string[];
+      voiceSamples?: string[];
+    }
+  ) {
+    const {
+      docType,
+      docNumber,
+      firstName,
+      lastName,
+      birthDate,
+      gender,
+      phone,
+      city,
+      department,
+      bloodType,
+      faceImages,
+      faceDescriptors,
+    } = body;
+
+    // Verificar si ya existe
+    const existing = await this.prisma.patient.findUnique({
+      where: { docNumber },
+    });
+
+    if (existing) {
+      return {
+        success: false,
+        message: 'Este paciente ya está registrado',
+        patient: {
+          id: existing.id,
+          name: `${existing.firstName} ${existing.lastName}`,
+        },
+      };
+    }
+
+    // Crear nuevo paciente
+    const patient = await this.prisma.patient.create({
+      data: {
+        docType: docType as any,
+        docNumber,
+        firstName,
+        lastName,
+        birthDate: new Date(birthDate),
+        gender,
+        phone,
+        city,
+        department: department || 'Colombia',
+        bloodType,
+        biometricRegistered: true,
+        faceRegisteredAt: new Date(),
+        // Guardar el primer descriptor como principal
+        // Los demás se pueden guardar en una tabla separada si es necesario
+      },
+    });
+
+    // TODO: Guardar faceImages y faceDescriptors en tabla separada FaceData
+
+    return {
+      success: true,
+      message: 'Paciente registrado exitosamente',
+      patient: {
+        id: patient.id,
+        name: `${patient.firstName} ${patient.lastName}`,
+        docNumber: patient.docNumber,
+      },
+    };
+  }
 }

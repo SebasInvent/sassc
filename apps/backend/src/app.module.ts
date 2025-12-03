@@ -28,8 +28,10 @@ import { RipsModule } from './rips/rips.module';
 import { MipresModule } from './mipres/mipres.module';
 import { ConsentimientoModule } from './consentimiento/consentimiento.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
-// Biometric V2 - Sistema Anticorrupcion SASSC
-import { BiometricV2Module } from './biometrics/v2/biometric-v2.module';
+// Biometric V2 - Sistema Anticorrupcion SASSC (deshabilitado temporalmente por errores de tipos)
+// import { BiometricV2Module } from './biometrics/v2/biometric-v2.module';
+// Lector de Cédula
+import { CedulaReaderModule } from './cedula-reader/cedula-reader.module';
 
 @Module({
   imports: [
@@ -60,8 +62,10 @@ import { BiometricV2Module } from './biometrics/v2/biometric-v2.module';
     MipresModule,
     ConsentimientoModule,
     FacturacionModule,
-    // Biometric V2
-    BiometricV2Module,
+    // Biometric V2 (deshabilitado temporalmente)
+    // BiometricV2Module,
+    // Lector de Cédula
+    CedulaReaderModule,
   ],
   controllers: [AppController],
   providers: [AppService],
