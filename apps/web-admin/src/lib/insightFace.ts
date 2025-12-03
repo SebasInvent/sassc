@@ -101,8 +101,12 @@ export async function loadInsightFaceModels(): Promise<void> {
     console.log('📍 URL Detección:', DETECTION_MODEL);
     console.log('📍 URL Reconocimiento:', RECOGNITION_MODEL);
     
-    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
+    // Configurar WASM paths al CDN para asegurar que encuentra los archivos .wasm y .mjs
+    const WASM_CDN = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
+    ort.env.wasm.wasmPaths = WASM_CDN;
+    // Desactivar features que requieren archivos extra problemáticos
     ort.env.wasm.numThreads = 1;
+    ort.env.wasm.proxy = false;
     
     // Función para cargar modelo con fetch manual (evita CORS)
     const loadModelBuffer = async (url: string): Promise<ArrayBuffer> => {
