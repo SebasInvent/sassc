@@ -5,21 +5,21 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos desde API route (proxy) o local
+// Configuración - modelos desde rewrite proxy o local
 const IS_LOCALHOST = typeof window !== 'undefined' && window.location.hostname.includes('localhost');
 
 // En local: usar archivos locales
-// En producción: usar API route como proxy a HuggingFace
+// En producción: usar rewrite proxy a HuggingFace (/hf-models/*)
 const LOCAL_PATH = '/models/insightface';
-const API_PATH = '/api/models';
+const PROXY_PATH = '/hf-models';
 
 // URLs de los modelos
 const DETECTION_MODEL = IS_LOCALHOST 
   ? `${LOCAL_PATH}/det_10g.onnx`
-  : `${API_PATH}/det_10g.onnx`;
+  : `${PROXY_PATH}/det_10g.onnx`;
 const RECOGNITION_MODEL = IS_LOCALHOST
   ? `${LOCAL_PATH}/w600k_r50.onnx`
-  : `${API_PATH}/w600k_r50.onnx`;
+  : `${PROXY_PATH}/w600k_r50.onnx`;
 
 // Usar window para persistir entre HMR (Hot Module Reload)
 declare global {
