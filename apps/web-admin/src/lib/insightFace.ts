@@ -8,13 +8,17 @@ import * as ort from 'onnxruntime-web';
 // Configuración - modelos desde HuggingFace (InventAgency) o local
 const USE_CDN = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
 
-// CDN: Tu repositorio en HuggingFace
-const CDN_PATH = 'https://huggingface.co/InventAgency/insightface-models/resolve/main';
+// CDN: Tu repositorio en HuggingFace (usando cdn-lfs para archivos grandes)
+const CDN_BASE = 'https://cdn-lfs.hf.co/repos/f5/a5/f5a5e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c8';
 const LOCAL_PATH = '/models/insightface';
 
-const MODEL_PATH = USE_CDN ? CDN_PATH : LOCAL_PATH;
-const DETECTION_MODEL = `${MODEL_PATH}/det_10g.onnx`;
-const RECOGNITION_MODEL = `${MODEL_PATH}/w600k_r50.onnx`;
+// URLs directas de descarga desde HuggingFace
+const DETECTION_MODEL = USE_CDN 
+  ? 'https://huggingface.co/InventAgency/insightface-models/resolve/main/det_10g.onnx?download=true'
+  : `${LOCAL_PATH}/det_10g.onnx`;
+const RECOGNITION_MODEL = USE_CDN
+  ? 'https://huggingface.co/InventAgency/insightface-models/resolve/main/w600k_r50.onnx?download=true'
+  : `${LOCAL_PATH}/w600k_r50.onnx`;
 
 // Usar window para persistir entre HMR (Hot Module Reload)
 declare global {
@@ -94,6 +98,8 @@ export async function loadInsightFaceModels(): Promise<void> {
   
   try {
     console.log('🔄 Cargando InsightFace SDK...');
+    console.log('📍 URL Detección:', DETECTION_MODEL);
+    console.log('📍 URL Reconocimiento:', RECOGNITION_MODEL);
     
     ort.env.wasm.wasmPaths = '/';
     ort.env.wasm.numThreads = 1;
