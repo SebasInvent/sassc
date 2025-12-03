@@ -5,8 +5,14 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos en /public/models/insightface/
-const MODEL_PATH = '/models/insightface';
+// Configuración - modelos desde CDN (HuggingFace) o local
+const USE_CDN = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+
+// CDN: HuggingFace tiene los modelos de InsightFace
+const CDN_PATH = 'https://huggingface.co/phamquiluan/insightface/resolve/main/buffalo_l';
+const LOCAL_PATH = '/models/insightface';
+
+const MODEL_PATH = USE_CDN ? CDN_PATH : LOCAL_PATH;
 const DETECTION_MODEL = `${MODEL_PATH}/det_10g.onnx`;
 const RECOGNITION_MODEL = `${MODEL_PATH}/w600k_r50.onnx`;
 
