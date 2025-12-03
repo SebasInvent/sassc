@@ -101,9 +101,17 @@ export async function loadInsightFaceModels(): Promise<void> {
     console.log('📍 URL Detección:', DETECTION_MODEL);
     console.log('📍 URL Reconocimiento:', RECOGNITION_MODEL);
     
-    // Configurar WASM paths al CDN con la versión EXACTA instalada (1.23.2)
-    const WASM_CDN = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
-    ort.env.wasm.wasmPaths = WASM_CDN;
+    // PLAN LOCAL vs PLAN RAILWAY
+    if (IS_LOCALHOST) {
+      console.log('🏠 MODO LOCAL: Usando archivos del sistema de archivos');
+      // En local, los archivos están en la raíz de public/
+      ort.env.wasm.wasmPaths = '/';
+    } else {
+      console.log('☁️ MODO PRODUCCIÓN: Usando CDN');
+      // Configurar WASM paths al CDN con la versión EXACTA instalada (1.23.2)
+      const WASM_CDN = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+      ort.env.wasm.wasmPaths = WASM_CDN;
+    }
     
     // Configuración para evitar errores de carga dinámica
     ort.env.wasm.numThreads = 1;
@@ -142,10 +150,10 @@ export async function loadInsightFaceModels(): Promise<void> {
     console.log('✅ InsightFace SDK listo');
     
   } catch (error: any) {
-    console.warn('⚠️ Error cargando InsightFace:', error?.message || error);
-    // Marcar como cargado para evitar reintentos infinitos
-    setLoaded();
-    isInitialized = true;
+    console.error('❌ ERROR CRÍTICO cargando InsightFace:', error?.message || error);
+    console.error('Stack:', error?.stack);
+    // NO marcar como inicializado si falló - permitir reintentos
+    isInitialized = false;
   } finally {
     setLoading(false);
   }
@@ -255,117 +263,135 @@ export async function detectFaceInsight(
     const ctx = canvas.getContext('2d')!;
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
+    // Debug: Verificar si la imagen no es negra
+    const centerPixel = (canvas.height / 2) * canvas.width + (canvas.width / 2);
+    const pixelData = imageData.data.slice(centerPixel * 4, centerPixel * 4 + 4);
+    console.log(`🎨 Pixel central: R=${pixelData[0]} G=${pixelData[1]} B=${pixelData[2]}`);
+
     // Preprocesar
     const { tensor, scale, padding } = preprocessForDetection(imageData);
     
-    // Usar la sesión verificada
-    const activeSession = getDetectionSession() || detectionSession;
-    if (!activeSession) {
-      console.warn('No hay sesión de detección disponible');
-      return null;
-    }
-    
     // Inferencia
     const feeds: Record<string, ort.Tensor> = {};
+    // Aseguramos que session existe (ya verificado arriba)
+    const activeSession = session!; 
     const inputName = activeSession.inputNames[0];
     feeds[inputName] = tensor;
-    
+    console.log('🧠 Ejecutando inferencia SCRFD...');
     const results = await activeSession.run(feeds);
     
-    // SCRFD det_10g outputs - necesitamos decodificar con anchors
-    // Por ahora, usamos un enfoque simplificado: encontrar el anchor con mejor score
-    // y estimar la posición basada en el índice del anchor
+    // Postprocesar resultados
+    console.log('📊 Outputs del modelo:', Object.keys(results));
     
-    const outputNames = activeSession.outputNames;
+    // DEBUG: Ver tamaños de cada output
+    for (const key of Object.keys(results)) {
+      const data = results[key].data as Float32Array;
+      const maxVal = Math.max(...Array.from(data.slice(0, 100)));
+      console.log(`  Output "${key}": length=${data.length}, maxVal(primeros100)=${maxVal.toFixed(4)}`);
+    }
     
+    // Lógica dinámica para encontrar outputs de score y bbox
     let bestScore = 0;
     let bestAnchorIdx = -1;
-    let bestScaleInfo: { stride: number; anchors: number; gridW: number; gridH: number } | null = null;
+    let bestStride = 0;
     
-    // Escalas del modelo SCRFD (stride 8, 16, 32)
-    const scaleConfigs = [
-      { scores: '448', stride: 8, gridW: 80, gridH: 80, anchors: 12800 },  // 640/8 = 80
-      { scores: '471', stride: 16, gridW: 40, gridH: 40, anchors: 3200 }, // 640/16 = 40
-      { scores: '494', stride: 32, gridW: 20, gridH: 20, anchors: 800 },  // 640/32 = 20
-    ];
+    const resultKeys = Object.keys(results);
     
-    for (const config of scaleConfigs) {
-      const scoresData = results[config.scores]?.data as Float32Array;
-      if (!scoresData) continue;
+    // Buscamos outputs que parezcan scores (shape [1, num_anchors, 1])
+    // Stride 8: 12800 anchors (640x640) -> data length 12800
+    // Stride 16: 3200 anchors -> data length 3200
+    // Stride 32: 800 anchors -> data length 800
+    
+    const strideMap: Record<number, number> = {
+      12800: 8,
+      3200: 16,
+      800: 32
+    };
+
+    for (const key of resultKeys) {
+      const output = results[key];
+      const data = output.data as Float32Array;
+      const len = data.length;
       
-      for (let i = 0; i < scoresData.length; i++) {
-        const score = scoresData[i];
-        // Umbral más bajo (0.3) para detectar caras giradas
-        if (score > bestScore && score > 0.3) {
-          bestScore = score;
-          bestAnchorIdx = i;
-          bestScaleInfo = config;
+      // Verificar si es un output de scores conocido
+      if (strideMap[len]) {
+        const stride = strideMap[len];
+        
+        for (let i = 0; i < len; i++) {
+          const score = data[i];
+          // Umbral muy bajo para detectar algo
+          if (score > 0.4 && score > bestScore) {
+            bestScore = score;
+            bestAnchorIdx = i;
+            bestStride = stride;
+          }
         }
       }
     }
     
-    if (!bestScaleInfo || bestAnchorIdx < 0) {
+    if (bestScore < 0.4 || bestAnchorIdx === -1) {
+      // console.log('🤷‍♂️ Score bajo:', bestScore);
       return null;
     }
     
-    // Calcular posición del anchor en la grilla
-    const { stride, gridW, gridH } = bestScaleInfo;
-    const anchorY = Math.floor(bestAnchorIdx / gridW);
-    const anchorX = bestAnchorIdx % gridW;
+    // Calcular bbox
+    // Necesitamos encontrar el output de bbox correspondiente al stride del score
+    // Bbox output tiene shape [1, num_anchors, 4] -> length = num_anchors * 4
+    const anchors = bestStride === 8 ? 12800 : (bestStride === 16 ? 3200 : 800);
+    const bboxLen = anchors * 4;
     
-    // Convertir a coordenadas en imagen 640x640
-    const centerX640 = (anchorX + 0.5) * stride;
-    const centerY640 = (anchorY + 0.5) * stride;
+    let bboxData: Float32Array | null = null;
     
-    // Tamaño estimado del rostro basado en el stride
-    const faceSize640 = stride * 4; // Estimación aproximada
-    
-    // Convertir a coordenadas originales
-    const [padX, padY] = padding;
-    const [scaleVal] = scale;
-    
-    const centerXOrig = (centerX640 - padX) / scaleVal;
-    const centerYOrig = (centerY640 - padY) / scaleVal;
-    const faceSizeOrig = faceSize640 / scaleVal;
-    
-    const finalX = Math.max(0, centerXOrig - faceSizeOrig / 2);
-    const finalY = Math.max(0, centerYOrig - faceSizeOrig / 2);
-    const finalW = Math.min(faceSizeOrig, originalWidth - finalX);
-    const finalH = Math.min(faceSizeOrig, originalHeight - finalY);
-    
-    // Extraer landmarks si están disponibles
-    // Los landmarks están en outputs 454, 477, 500 (10 valores cada uno: x1,y1,x2,y2,x3,y3,x4,y4,x5,y5)
-    let landmarks: number[][] | undefined;
-    
-    const landmarkOutputs = ['454', '477', '500'];
-    const landmarkStrides = [8, 16, 32];
-    
-    // Encontrar el output de landmarks correspondiente al stride usado
-    const strideIdx = landmarkStrides.indexOf(stride);
-    if (strideIdx >= 0) {
-      const lmOutput = results[landmarkOutputs[strideIdx]]?.data as Float32Array;
-      if (lmOutput && bestAnchorIdx * 10 + 9 < lmOutput.length) {
-        const lmIdx = bestAnchorIdx * 10;
-        landmarks = [
-          [(lmOutput[lmIdx] * stride + centerX640 - padX) / scaleVal, (lmOutput[lmIdx + 1] * stride + centerY640 - padY) / scaleVal],     // Ojo izquierdo
-          [(lmOutput[lmIdx + 2] * stride + centerX640 - padX) / scaleVal, (lmOutput[lmIdx + 3] * stride + centerY640 - padY) / scaleVal], // Ojo derecho
-          [(lmOutput[lmIdx + 4] * stride + centerX640 - padX) / scaleVal, (lmOutput[lmIdx + 5] * stride + centerY640 - padY) / scaleVal], // Nariz
-          [(lmOutput[lmIdx + 6] * stride + centerX640 - padX) / scaleVal, (lmOutput[lmIdx + 7] * stride + centerY640 - padY) / scaleVal], // Boca izq
-          [(lmOutput[lmIdx + 8] * stride + centerX640 - padX) / scaleVal, (lmOutput[lmIdx + 9] * stride + centerY640 - padY) / scaleVal], // Boca der
-        ];
+    // Buscar el output de bbox que coincida en tamaño
+    for (const key of resultKeys) {
+      const data = results[key].data as Float32Array;
+      if (data.length === bboxLen) {
+        bboxData = data;
+        break;
       }
     }
     
-    console.log('Detección:', { 
-      bbox: [finalX, finalY, finalW, finalH],
-      landmarks: landmarks ? 'disponibles' : 'no disponibles',
-      score: bestScore 
-    });
+    if (!bboxData) {
+        console.warn('No se encontró output de bbox compatible');
+        return null;
+    }
+    
+    // Recuperar bbox (están en formato distancia al centro del anchor: l, t, r, b)
+    // Nota: SCRFD exportado simple suele dar bbox directo o distancias. Asumiremos distancias * stride.
+    
+    const gridW = 640 / bestStride;
+    const anchorY = Math.floor(bestAnchorIdx / gridW);
+    const anchorX = bestAnchorIdx % gridW;
+    
+    const anchorCenterX = (anchorX + 0.5) * bestStride;
+    const anchorCenterY = (anchorY + 0.5) * bestStride;
+    
+    const idx4 = bestAnchorIdx * 4;
+    const l = bboxData[idx4] * bestStride;
+    const t = bboxData[idx4+1] * bestStride;
+    const r = bboxData[idx4+2] * bestStride;
+    const b = bboxData[idx4+3] * bestStride;
+    
+    const x1 = anchorCenterX - l;
+    const y1 = anchorCenterY - t;
+    const x2 = anchorCenterX + r;
+    const y2 = anchorCenterY + b;
+    
+    // Escalar a tamaño original
+    const [padX, padY] = padding;
+    const [scaleVal] = scale;
+    
+    const finalX = (x1 - padX) / scaleVal;
+    const finalY = (y1 - padY) / scaleVal;
+    const finalW = (x2 - x1) / scaleVal;
+    const finalH = (y2 - y1) / scaleVal;
+    
+    // console.log(`✨ ROSTRO DETECTADO! Score: ${bestScore.toFixed(2)} en stride ${bestStride}`);
     
     return {
       bbox: [finalX, finalY, finalW, finalH],
       confidence: bestScore,
-      landmarks,
+      landmarks: [] // Simplificado
     };
     
   } catch (error) {

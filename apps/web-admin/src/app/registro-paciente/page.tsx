@@ -22,6 +22,7 @@ type Step =
   | 'cedula'           // Esperando cédula en lector
   | 'datos_adicionales'
   | 'fotos'
+  | 'huella'           // Captura de huella dactilar
   | 'processing'
   | 'success'
   | 'error';
@@ -156,6 +157,10 @@ export default function RegistroPacientePage() {
   const [currentFaceStep, setCurrentFaceStep] = useState(0);
   const [autoCapturing, setAutoCapturing] = useState(false);
   const [captureCountdown, setCaptureCountdown] = useState(0);
+  
+  // Huella
+  const [fingerprintData, setFingerprintData] = useState<string | null>(null);
+  const [fingerprintStatus, setFingerprintStatus] = useState<'waiting' | 'capturing' | 'success' | 'error'>('waiting');
   
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -353,15 +358,17 @@ export default function RegistroPacientePage() {
   const handleCedulaRead = async (data: CedulaData) => {
     setCedulaData(data);
     
-    console.log('📋 Cédula leída:', data);
+    console.log('📋 Cédula leída:', data.cedula);
     
-    // Formatear número de cédula para lectura (ej: 1234567890 -> "1.234.567.890")
-    const cedulaFormateada = data.cedula.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    // Leer número de cédula DÍGITO POR DÍGITO
+    const cedulaDigitos = data.cedula.split('').join(', ');
     
-    // Mensaje natural y personalizado
-    const nombreCompleto = `${data.nombre1} ${data.nombre2 || ''}`.trim();
-    const mensaje = `¡Hola ${nombreCompleto}! He verificado tu cédula número ${cedulaFormateada}. ` +
-                   `Por favor, ingresa tu número de teléfono y ciudad de residencia para continuar.`;
+    // Solo nombre y apellido
+    const nombre = data.nombre1;
+    const apellido = data.apellido1;
+    
+    // Mensaje simple: nombre, apellido y cédula dígito por dígito
+    const mensaje = `${nombre} ${apellido}. Cédula: ${cedulaDigitos}.`;
     
     speak(mensaje, voiceEnabled);
     setStep('datos_adicionales');
@@ -381,74 +388,110 @@ export default function RegistroPacientePage() {
     startPhotoSequence();
   };
   
-  // ============ SECUENCIA DE FOTOS AUTOMÁTICA ============
-  const photoSequenceRef = useRef<NodeJS.Timeout | null>(null);
-  const [photoCountdown, setPhotoCountdown] = useState(3);
+  // ============ SECUENCIA DE FOTOS COORDINADA ============
+  const capturedImagesRef = useRef<string[]>([]);
+  const capturedDescriptorsRef = useRef<Float32Array[]>([]);
+  const currentStepRef = useRef(0);
+  const isProcessingRef2 = useRef(false);
   
   const startPhotoSequence = () => {
-    // Decir primera instrucción
-    speak(FACE_STEPS[0].voice, voiceEnabled);
+    // Reset
+    capturedImagesRef.current = [];
+    capturedDescriptorsRef.current = [];
+    currentStepRef.current = 0;
+    isProcessingRef2.current = false;
     
-    // Iniciar countdown para primera foto
-    runPhotoCountdown(0);
+    // Iniciar con la primera pose
+    captureNextPose(0);
   };
   
-  const runPhotoCountdown = (stepIndex: number) => {
-    let count = 3;
-    setPhotoCountdown(3);
+  const captureNextPose = async (stepIndex: number) => {
+    if (stepIndex >= FACE_STEPS.length) {
+      // Fotos terminadas - procesar registro
+      speak('Listo. Procesando.', voiceEnabled);
+      handleSubmit(capturedImagesRef.current, capturedDescriptorsRef.current);
+      return;
+    }
     
-    const countdownInterval = setInterval(() => {
-      count--;
-      setPhotoCountdown(count);
+    if (isProcessingRef2.current) return;
+    isProcessingRef2.current = true;
+    
+    setCurrentFaceStep(stepIndex);
+    
+    // 1. Decir la instrucción
+    speak(FACE_STEPS[stepIndex].voice, voiceEnabled);
+    
+    // 2. Esperar 1.5 segundos para que la persona gire
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // 3. Capturar la foto
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
       
-      if (count <= 0) {
-        clearInterval(countdownInterval);
-        captureAndAdvance(stepIndex);
+      canvas.width = 480;
+      canvas.height = 360;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, 480, 360);
+        const image = canvas.toDataURL('image/jpeg', 0.6);
+        const descriptor = new Float32Array(512);
+        
+        capturedImagesRef.current.push(image);
+        capturedDescriptorsRef.current.push(descriptor);
+        setFaceImages([...capturedImagesRef.current]);
+        setFaceDescriptors([...capturedDescriptorsRef.current]);
+        
+        console.log(`📸 ${stepIndex + 1}/${FACE_STEPS.length} - ${FACE_STEPS[stepIndex].key}`);
       }
-    }, 1000);
+    }
     
-    photoSequenceRef.current = countdownInterval as unknown as NodeJS.Timeout;
+    isProcessingRef2.current = false;
+    
+    // 4. Pasar a la siguiente pose (sin decir "listo")
+    captureNextPose(stepIndex + 1);
   };
-  
-  const captureAndAdvance = async (stepIndex: number) => {
-    if (!videoRef.current || !canvasRef.current) return;
+
+  // ============ CAPTURA DE HUELLA DACTILAR ============
+  const startFingerprintCapture = async () => {
+    setFingerprintStatus('capturing');
     
-    // Capturar foto
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    canvas.width = 480;
-    canvas.height = 360;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.drawImage(video, 0, 0, 480, 360);
-    const image = canvas.toDataURL('image/jpeg', 0.6);
-    const descriptor = new Float32Array(512); // Descriptor placeholder
-    
-    const newImages = [...faceImages, image];
-    const newDescriptors = [...faceDescriptors, descriptor];
-    
-    setFaceImages(newImages);
-    setFaceDescriptors(newDescriptors);
-    
-    console.log(`📸 Foto ${stepIndex + 1} de ${FACE_STEPS.length} capturada`);
-    
-    const nextStep = stepIndex + 1;
-    
-    if (nextStep < FACE_STEPS.length) {
-      // Siguiente paso
-      setCurrentFaceStep(nextStep);
-      speak(FACE_STEPS[nextStep].voice, voiceEnabled);
+    try {
+      // Llamar al backend para capturar huella
+      const response = await fetch('http://localhost:3001/fingerprint/capture', {
+        method: 'POST',
+      });
       
-      // Esperar 1 segundo y luego iniciar countdown
+      const result = await response.json();
+      
+      if (result.success && result.fingerprint) {
+        setFingerprintData(result.fingerprint);
+        setFingerprintStatus('success');
+        speak('Huella capturada. Procesando registro.', voiceEnabled);
+        
+        // Continuar con el submit
+        setTimeout(() => {
+          handleSubmit(capturedImagesRef.current, capturedDescriptorsRef.current);
+        }, 1000);
+      } else {
+        // Reintentar
+        setFingerprintStatus('error');
+        speak('No se detectó la huella. Intenta de nuevo.', voiceEnabled);
+        
+        // Reintentar después de 2 segundos
+        setTimeout(() => {
+          startFingerprintCapture();
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error capturando huella:', error);
+      setFingerprintStatus('error');
+      speak('Error con el lector. Intenta de nuevo.', voiceEnabled);
+      
       setTimeout(() => {
-        runPhotoCountdown(nextStep);
-      }, 1500);
-    } else {
-      // Terminado
-      speak('Excelente. Procesando tu registro.', voiceEnabled);
-      handleSubmit(newImages, newDescriptors);
+        startFingerprintCapture();
+      }, 2000);
     }
   };
 
@@ -500,15 +543,15 @@ export default function RegistroPacientePage() {
         faceDescriptors: descriptors.map(d => descriptorToStringInsight(d)),
       };
       
-      console.log('📤 Datos del paciente a registrar:', patientData);
-      console.log('📸 Imágenes capturadas:', images.length);
-      console.log('🔢 Descriptores faciales:', descriptors.length, 'de', descriptors[0]?.length, 'dimensiones');
+      console.log('📤 Registrando paciente:', patientData.firstName, patientData.lastName);
+      console.log('📸 Fotos capturadas:', images.length);
       
       // TODO: Enviar al backend cuando el endpoint esté desplegado
       // Por ahora, simular éxito para probar el flujo
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      speak(`Registro exitoso. Bienvenido ${cedulaData!.nombre1}.`, voiceEnabled);
+      // Mensaje de éxito simple: solo nombre y apellido
+      speak(`Registro exitoso. ${cedulaData!.nombre1} ${cedulaData!.apellido1}.`, voiceEnabled);
       setStep('success');
       
       // NO hacer resetFlow automático - el usuario debe recargar la página para otro registro
@@ -772,32 +815,45 @@ export default function RegistroPacientePage() {
           <div className="absolute bottom-24 left-0 right-0 flex flex-col items-center z-30">
             {/* Instrucción grande y clara */}
             <div className="text-center mb-6">
-              <p className="text-8xl mb-6">{FACE_STEPS[currentFaceStep]?.icon || '📸'}</p>
-              <p className="text-4xl text-white font-bold drop-shadow-lg mb-4">
+              <p className="text-8xl mb-4">{FACE_STEPS[currentFaceStep]?.icon || '📸'}</p>
+              <p className="text-4xl text-white font-bold drop-shadow-lg mb-2">
                 {FACE_STEPS[currentFaceStep]?.label || 'Capturando...'}
               </p>
-              
-              {/* Countdown grande y visible */}
-              <div className="w-24 h-24 rounded-full bg-cyan-500 flex items-center justify-center mx-auto animate-pulse">
-                <span className="text-5xl font-bold text-white">{photoCountdown}</span>
-              </div>
-              <p className="mt-4 text-xl text-cyan-300">Capturando en {photoCountdown}...</p>
+              <p className="text-xl text-cyan-300 animate-pulse">Detectando pose...</p>
             </div>
             
-            {/* Progreso de fotos */}
-            <div className="flex items-center gap-4 bg-black/60 backdrop-blur px-8 py-4 rounded-full">
-              {FACE_STEPS.map((_, i) => (
-                <div key={i} className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold transition-all ${
+            {/* Progreso de fotos - más compacto */}
+            <div className="flex items-center gap-3 bg-black/60 backdrop-blur px-6 py-3 rounded-full">
+              {FACE_STEPS.map((step, i) => (
+                <div key={i} className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold transition-all ${
                   i < currentFaceStep 
                     ? 'bg-green-500 text-white' 
                     : i === currentFaceStep 
-                      ? 'bg-cyan-500 text-white ring-4 ring-cyan-400/50 scale-110' 
+                      ? 'bg-cyan-500 text-white ring-4 ring-cyan-400/50 scale-110 animate-pulse' 
                       : 'bg-slate-700 text-slate-400'
                 }`}>
-                  {i < currentFaceStep ? '✓' : i + 1}
+                  {i < currentFaceStep ? '✓' : step.icon}
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        
+        {step === 'huella' && (
+          <div className="text-center">
+            <div className={`text-8xl mb-6 ${fingerprintStatus === 'capturing' ? 'animate-pulse' : ''}`}>
+              {fingerprintStatus === 'success' ? '✅' : fingerprintStatus === 'error' ? '❌' : '👆'}
+            </div>
+            <p className="text-3xl text-white font-bold mb-4">
+              {fingerprintStatus === 'success' 
+                ? 'Huella capturada' 
+                : fingerprintStatus === 'error' 
+                  ? 'Intenta de nuevo' 
+                  : 'Coloca tu dedo en el lector'}
+            </p>
+            <p className="text-xl text-cyan-300 animate-pulse">
+              {fingerprintStatus === 'capturing' ? 'Esperando huella...' : ''}
+            </p>
           </div>
         )}
         

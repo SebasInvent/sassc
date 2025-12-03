@@ -32,6 +32,8 @@ import { FacturacionModule } from './facturacion/facturacion.module';
 // import { BiometricV2Module } from './biometrics/v2/biometric-v2.module';
 // Lector de Cédula
 import { CedulaReaderModule } from './cedula-reader/cedula-reader.module';
+// Lector de Huellas
+import { FingerprintReaderModule } from './fingerprint-reader/fingerprint-reader.module';
 // Proxy para modelos ONNX
 import { ModelsProxyModule } from './models-proxy/models-proxy.module';
 
@@ -68,6 +70,8 @@ import { ModelsProxyModule } from './models-proxy/models-proxy.module';
     // BiometricV2Module,
     // Lector de Cédula
     CedulaReaderModule,
+    // Lector de Huellas
+    FingerprintReaderModule,
     // Proxy para modelos ONNX (InsightFace)
     ModelsProxyModule,
   ],
