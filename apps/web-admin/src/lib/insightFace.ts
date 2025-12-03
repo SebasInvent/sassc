@@ -5,11 +5,11 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos desde CDN (HuggingFace) o local
+// Configuración - modelos desde HuggingFace (InventAgency) o local
 const USE_CDN = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
 
-// CDN: HuggingFace tiene los modelos de InsightFace
-const CDN_PATH = 'https://huggingface.co/phamquiluan/insightface/resolve/main/buffalo_l';
+// CDN: Tu repositorio en HuggingFace
+const CDN_PATH = 'https://huggingface.co/InventAgency/insightface-models/resolve/main';
 const LOCAL_PATH = '/models/insightface';
 
 const MODEL_PATH = USE_CDN ? CDN_PATH : LOCAL_PATH;
