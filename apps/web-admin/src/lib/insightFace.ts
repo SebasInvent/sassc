@@ -5,24 +5,21 @@
 
 import * as ort from 'onnxruntime-web';
 
-// Configuración - modelos desde backend proxy o local
+// Configuración - modelos desde API route (proxy) o local
 const IS_LOCALHOST = typeof window !== 'undefined' && window.location.hostname.includes('localhost');
 
-// En producción: usar backend de Railway como proxy
 // En local: usar archivos locales
-const BACKEND_URL = IS_LOCALHOST 
-  ? 'http://localhost:3001' 
-  : 'https://backend-production-4923.up.railway.app';
-
+// En producción: usar API route como proxy a HuggingFace
 const LOCAL_PATH = '/models/insightface';
+const API_PATH = '/api/models';
 
 // URLs de los modelos
 const DETECTION_MODEL = IS_LOCALHOST 
   ? `${LOCAL_PATH}/det_10g.onnx`
-  : `${BACKEND_URL}/models/insightface/det_10g.onnx`;
+  : `${API_PATH}/det_10g.onnx`;
 const RECOGNITION_MODEL = IS_LOCALHOST
   ? `${LOCAL_PATH}/w600k_r50.onnx`
-  : `${BACKEND_URL}/models/insightface/w600k_r50.onnx`;
+  : `${API_PATH}/w600k_r50.onnx`;
 
 // Usar window para persistir entre HMR (Hot Module Reload)
 declare global {
@@ -105,11 +102,20 @@ export async function loadInsightFaceModels(): Promise<void> {
     console.log('📍 URL Detección:', DETECTION_MODEL);
     console.log('📍 URL Reconocimiento:', RECOGNITION_MODEL);
     
-    ort.env.wasm.wasmPaths = '/';
+    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
     ort.env.wasm.numThreads = 1;
     
+    // Función para cargar modelo con fetch manual (evita CORS)
+    const loadModelBuffer = async (url: string): Promise<ArrayBuffer> => {
+      console.log(`📥 Descargando: ${url}`);
+      const response = await fetch(url, { mode: 'cors' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
+      return response.arrayBuffer();
+    };
+    
     console.log('- Cargando modelo de detección (SCRFD)...');
-    const det = await ort.InferenceSession.create(DETECTION_MODEL, {
+    const detBuffer = await loadModelBuffer(DETECTION_MODEL);
+    const det = await ort.InferenceSession.create(detBuffer, {
       executionProviders: ['wasm'],
       graphOptimizationLevel: 'basic',
     });
@@ -118,7 +124,8 @@ export async function loadInsightFaceModels(): Promise<void> {
     console.log('✓ Modelo de detección cargado');
     
     console.log('- Cargando modelo de reconocimiento (ArcFace)...');
-    const rec = await ort.InferenceSession.create(RECOGNITION_MODEL, {
+    const recBuffer = await loadModelBuffer(RECOGNITION_MODEL);
+    const rec = await ort.InferenceSession.create(recBuffer, {
       executionProviders: ['wasm'],
       graphOptimizationLevel: 'basic',
     });
