@@ -700,10 +700,73 @@ export default function RegistroPacienteV2Page() {
     );
   }
 
+  // Obtener color de la barra LED
+  const getLedColor = () => {
+    if (step === 'success') return 'led-green';
+    if (step === 'error') return 'led-red';
+    if (faceStatus === 'perfect') return 'led-green';
+    if (faceStatus === 'no_face') return 'led-red';
+    return 'led-white'; // Detectando/procesando
+  };
+
   // Main UI
   return (
-    <div className="fixed inset-0 bg-black">
-      {/* Video fullscreen */}
+    <div className="fixed inset-0 bg-black overflow-hidden">
+      {/* CSS para la barra LED */}
+      <style jsx>{`
+        @keyframes led-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        @keyframes led-scan {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .led-bar {
+          height: 12px;
+          border-radius: 6px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 0 30px currentColor, 0 0 60px currentColor, 0 0 90px currentColor;
+          animation: led-pulse 2s ease-in-out infinite;
+        }
+        .led-bar::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+          animation: led-scan 2s ease-in-out infinite;
+        }
+        .led-green {
+          background: linear-gradient(90deg, #00ff00, #22ff22, #00ff00);
+          color: #00ff00;
+        }
+        .led-red {
+          background: linear-gradient(90deg, #ff0000, #ff2222, #ff0000);
+          color: #ff0000;
+        }
+        .led-white {
+          background: linear-gradient(90deg, #ffffff, #aaffff, #ffffff);
+          color: #ffffff;
+        }
+        .face-guide {
+          border: 3px solid rgba(255,255,255,0.6);
+          box-shadow: 0 0 20px rgba(255,255,255,0.3), inset 0 0 20px rgba(255,255,255,0.1);
+        }
+        .face-guide.perfect {
+          border-color: #22c55e;
+          box-shadow: 0 0 30px rgba(34,197,94,0.5), inset 0 0 30px rgba(34,197,94,0.2);
+        }
+        .face-guide.error {
+          border-color: #ef4444;
+          box-shadow: 0 0 30px rgba(239,68,68,0.5), inset 0 0 30px rgba(239,68,68,0.2);
+        }
+      `}</style>
+
+      {/* Video fullscreen - SIN overlay oscuro */}
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
@@ -714,70 +777,78 @@ export default function RegistroPacienteV2Page() {
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70" />
+      {/* === BARRA LED SUPERIOR === */}
+      <div className="absolute top-0 left-0 right-0 p-3 z-50">
+        <div className={`led-bar ${getLedColor()}`} />
+      </div>
 
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-            <User className="w-5 h-5 text-cyan-400" />
-          </div>
-          <div>
-            <h1 className="text-white font-bold">Registro de Paciente</h1>
-            <p className="text-white/60 text-sm">Guiado por voz</p>
-          </div>
+      {/* Header con info */}
+      <div className="absolute top-6 left-0 right-0 px-4 pt-2 flex items-center justify-between z-40">
+        <div className="flex items-center gap-2 text-white/80 text-xs">
+          <span className="font-mono">v2.0.0</span>
         </div>
-        
+        <div className="text-white/80 text-xs font-mono">
+          {new Date().toLocaleString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setVoiceEnabled(!voiceEnabled)}
-            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white"
+            className="p-2 rounded-full bg-black/30 text-white/80"
           >
-            {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={() => setShowManualInput(!showManualInput)}
-            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white"
-          >
-            <Keyboard className="w-5 h-5" />
+            {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="absolute top-20 left-4 right-4">
-        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 transition-all duration-500"
-            style={{ width: `${getStepProgress()}%` }}
-          />
+      {/* Mensaje de estado superior */}
+      <div className="absolute top-16 left-0 right-0 text-center z-40">
+        <p className="text-white text-lg font-medium drop-shadow-lg">
+          {faceStatus === 'no_face' ? 'Detectando, por favor espere ...' :
+           faceStatus === 'perfect' ? currentQuestion || 'Rostro detectado' :
+           'Ajustando posición ...'}
+        </p>
+      </div>
+
+      {/* === GUÍA FACIAL CIRCULAR === */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+        <div 
+          className={`w-72 h-72 rounded-full face-guide transition-all duration-500 ${
+            faceStatus === 'perfect' ? 'perfect' : 
+            faceStatus === 'no_face' ? 'error' : ''
+          }`}
+        >
+          {/* Puntos de landmarks simulados */}
+          {faceStatus === 'perfect' && (
+            <>
+              <div className="absolute top-8 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full" />
+              <div className="absolute top-1/3 left-8 w-2 h-2 bg-blue-400 rounded-full" />
+              <div className="absolute top-1/3 right-8 w-2 h-2 bg-blue-400 rounded-full" />
+              <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full" />
+              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full" />
+            </>
+          )}
         </div>
       </div>
 
-      {/* Guía facial */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className={`w-64 h-80 rounded-[50%] border-4 ${getBorderColor()} transition-all duration-300`}>
-          <div className="absolute -top-2 -left-2 w-8 h-8 border-l-4 border-t-4 border-inherit rounded-tl-xl" />
-          <div className="absolute -top-2 -right-2 w-8 h-8 border-r-4 border-t-4 border-inherit rounded-tr-xl" />
-          <div className="absolute -bottom-2 -left-2 w-8 h-8 border-l-4 border-b-4 border-inherit rounded-bl-xl" />
-          <div className="absolute -bottom-2 -right-2 w-8 h-8 border-r-4 border-b-4 border-inherit rounded-br-xl" />
-        </div>
-      </div>
+      {/* === PANEL INFERIOR === */}
+      <div className="absolute bottom-0 left-0 right-0 z-40">
+        {/* Resultado de identificación (cuando hay rostro perfecto) */}
+        {faceStatus === 'perfect' && patientData.firstName && (
+          <div className="mx-4 mb-2 bg-black/60 backdrop-blur-sm rounded-2xl p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-green-400" />
+            </div>
+            <div>
+              <p className="text-white font-semibold text-lg">Registro en progreso</p>
+              <p className="text-white/70">{patientData.firstName} {patientData.lastName}</p>
+            </div>
+          </div>
+        )}
 
-      {/* Pregunta actual */}
-      <div className="absolute left-4 right-4 top-1/2 mt-44">
-        <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-          <p className="text-white text-center text-lg">{currentQuestion}</p>
-        </div>
-      </div>
-
-      {/* Panel de voz */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 pb-8">
         {/* Visualizador de voz */}
         {(speechRecognition.isListening || voiceRecorder.isRecording) && (
-          <div className="mb-4 flex justify-center">
-            <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+          <div className="mx-4 mb-2">
+            <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-4">
               {voiceRecorder.isRecording ? (
                 <div className="flex flex-col items-center gap-2">
                   <RecordingIndicator isRecording={true} duration={voiceRecorder.recordingTime} />
@@ -801,78 +872,86 @@ export default function RegistroPacienteV2Page() {
 
         {/* Input manual */}
         {showManualInput && (
-          <div className="mb-4 flex gap-2">
+          <div className="mx-4 mb-2 flex gap-2">
             <input
               type="text"
               value={manualInputValue}
               onChange={(e) => setManualInputValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
               placeholder="Escribe tu respuesta..."
-              className="flex-1 h-14 bg-slate-800/80 border border-slate-700 rounded-xl px-4 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+              className="flex-1 h-14 bg-black/60 backdrop-blur-sm border border-white/20 rounded-xl px-4 text-white placeholder:text-white/50 focus:border-green-500 focus:outline-none"
               autoFocus
             />
             <button
               onClick={handleManualSubmit}
-              className="h-14 px-6 bg-cyan-500 text-white font-semibold rounded-xl"
+              className="h-14 px-6 bg-green-500 text-white font-semibold rounded-xl"
             >
-              Enviar
+              OK
             </button>
           </div>
         )}
 
-        {/* Botón de acción */}
+        {/* Botones de acción */}
         {step.startsWith('voice_') && (
-          <button
-            onClick={captureVoiceSample}
-            disabled={!voiceRecorder.isRecording}
-            className={`w-full h-16 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3 ${
-              voiceRecorder.isRecording
-                ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white'
-                : 'bg-slate-800 text-slate-500'
-            }`}
-          >
-            <Mic className="w-6 h-6" />
-            {voiceRecorder.isRecording ? 'Detener Grabación' : 'Grabando...'}
-          </button>
+          <div className="mx-4 mb-4">
+            <button
+              onClick={captureVoiceSample}
+              disabled={!voiceRecorder.isRecording}
+              className={`w-full h-14 rounded-xl font-semibold flex items-center justify-center gap-3 ${
+                voiceRecorder.isRecording
+                  ? 'bg-red-500 text-white'
+                  : 'bg-white/20 text-white/50'
+              }`}
+            >
+              <Mic className="w-5 h-5" />
+              {voiceRecorder.isRecording ? 'Detener Grabación' : 'Preparando...'}
+            </button>
+          </div>
         )}
 
         {step.startsWith('face_') && (
-          <button
-            onClick={captureFaceImage}
-            disabled={faceStatus !== 'perfect'}
-            className={`w-full h-16 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3 ${
-              faceStatus === 'perfect'
-                ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/30'
-                : 'bg-slate-800 text-slate-500'
-            }`}
-          >
-            <Camera className="w-6 h-6" />
-            Capturar ({faceImages.length + 1}/5)
-          </button>
+          <div className="mx-4 mb-4">
+            <button
+              onClick={captureFaceImage}
+              disabled={faceStatus !== 'perfect'}
+              className={`w-full h-14 rounded-xl font-semibold flex items-center justify-center gap-3 ${
+                faceStatus === 'perfect'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white/20 text-white/50'
+              }`}
+            >
+              <Camera className="w-5 h-5" />
+              Capturar ({faceImages.length + 1}/5)
+            </button>
+          </div>
         )}
 
-        {/* Estado del rostro */}
-        <div className="flex justify-center mt-4">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
-            faceStatus === 'perfect' ? 'bg-green-500/20 text-green-400' :
-            faceStatus === 'no_face' ? 'bg-red-500/20 text-red-400' :
-            'bg-yellow-500/20 text-yellow-400'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${
-              faceStatus === 'perfect' ? 'bg-green-400' :
-              faceStatus === 'no_face' ? 'bg-red-400' :
-              'bg-yellow-400'
-            } animate-pulse`} />
-            <span className="text-sm font-medium">
-              {faceStatus === 'perfect' ? 'Rostro detectado' :
-               faceStatus === 'no_face' ? 'Sin rostro' :
-               faceStatus === 'too_far' ? 'Muy lejos' :
-               faceStatus === 'too_close' ? 'Muy cerca' :
-               'Ajustando...'}
-            </span>
+        {/* Barra de información inferior */}
+        <div className="bg-black/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo-sassc.png" alt="SASSC" className="h-8 w-auto opacity-80" onError={(e) => e.currentTarget.style.display = 'none'} />
+            <div className="text-xs text-white/60">
+              <p className="font-semibold text-white/80">SASSC Medicare</p>
+              <p>Sistema de Registro Biométrico</p>
+            </div>
+          </div>
+          <div className="text-right text-xs text-white/60">
+            <p className="flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${faceStatus === 'perfect' ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`} />
+              {faceStatus === 'perfect' ? 'Conectado' : 'Detectando'}
+            </p>
+            <p className="font-mono text-white/40">v2.0.0</p>
           </div>
         </div>
       </div>
+
+      {/* Botón de teclado flotante */}
+      <button
+        onClick={() => setShowManualInput(!showManualInput)}
+        className="absolute bottom-24 right-4 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white z-50"
+      >
+        <Keyboard className="w-5 h-5" />
+      </button>
     </div>
   );
 }
