@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req, Query, Logger } from '@nestjs/common';
 import { Request } from 'express';
-import { PatientsService } from './patients.service';
+import { PatientsService, RegisterWithBiometricDto } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { ScopesGuard } from '../auth/scopes.guard';
 import { Scopes } from '../auth/scopes.decorator';
@@ -8,6 +8,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('fhir/Patient')
 export class PatientsController {
+  private readonly logger = new Logger(PatientsController.name);
+  
   constructor(private readonly patientsService: PatientsService) {}
 
   @Post()
@@ -58,5 +60,20 @@ export class PatientsController {
   @UseGuards(JwtAuthGuard)
   findNearestCAP(@Param('city') city: string, @Param('department') department: string) {
     return this.patientsService.findNearestCAP(city, department);
+  }
+
+  // ============ REGISTRO BIOMÉTRICO (SIN AUTH PARA KIOSKO) ============
+  
+  // Registro con biometría facial - endpoint público para kiosko
+  @Post('register-biometric')
+  async registerWithBiometric(@Body() data: RegisterWithBiometricDto) {
+    this.logger.log(`📝 Registro biométrico recibido: ${data.docNumber}`);
+    return this.patientsService.registerWithBiometric(data);
+  }
+
+  // Buscar paciente por documento - endpoint público para verificación
+  @Get('by-doc/:docNumber')
+  async findByDocNumber(@Param('docNumber') docNumber: string) {
+    return this.patientsService.findByDocNumber(docNumber);
   }
 }

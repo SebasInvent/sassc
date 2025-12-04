@@ -541,21 +541,29 @@ export default function RegistroPacientePage() {
         department: 'Colombia',
         bloodType: cedulaData!.rh,
         faceDescriptors: descriptors.map(d => descriptorToStringInsight(d)),
+        faceImages: images,
       };
       
       console.log('📤 Registrando paciente:', patientData.firstName, patientData.lastName);
       console.log('📸 Fotos capturadas:', images.length);
+      console.log('🔐 Descriptores:', descriptors.length);
       
-      // TODO: Enviar al backend cuando el endpoint esté desplegado
-      // Por ahora, simular éxito para probar el flujo
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Enviar al backend
+      const response = await fetch(`${API_URL}/fhir/Patient/register-biometric`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patientData),
+      });
       
-      // Mensaje de éxito simple: solo nombre y apellido
-      speak(`Registro exitoso. ${cedulaData!.nombre1} ${cedulaData!.apellido1}.`, voiceEnabled);
-      setStep('success');
+      const result = await response.json();
+      console.log('📥 Respuesta del servidor:', result);
       
-      // NO hacer resetFlow automático - el usuario debe recargar la página para otro registro
-      // setTimeout(() => resetFlow(), 5000);
+      if (result.success) {
+        speak(`Registro exitoso. ${cedulaData!.nombre1} ${cedulaData!.apellido1}.`, voiceEnabled);
+        setStep('success');
+      } else {
+        throw new Error(result.message || 'Error al registrar paciente');
+      }
       
     } catch (err) {
       console.error('Submit error:', err);
